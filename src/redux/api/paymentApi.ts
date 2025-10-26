@@ -1,13 +1,27 @@
+
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from '../store';
 
-// Örnek PaymentMethod tipi
 export interface PaymentMethod {
   id: string;
-  name: string;
-  description?: string;
-  isActive: boolean;
+  userId: string;
+  cardType: string;
+  cardholderName: string;
+  cardNumberLast4: string;
+  expiryMonth: string;
+  expiryYear: string;
+  isPrimary: boolean;
 }
+
+export interface PaymentMethodPayload {
+  cardType: string;
+  cardholderName: string;
+  cardNumber: string;
+  expiryMonth: string;
+  expiryYear: number;
+  cvv: string;
+  isPrimary: boolean;
+};
 
 export const paymentApi = createApi({
   reducerPath: 'paymentApi',
@@ -25,10 +39,11 @@ export const paymentApi = createApi({
       query: () => '/',
       providesTags: ['PaymentMethod'],
     }),
-    createPaymentMethod: builder.mutation<PaymentMethod, Partial<PaymentMethod>>({
+    createPaymentMethod: builder.mutation<PaymentMethod, PaymentMethodPayload>({
       query: (body) => ({ url: '/', method: 'POST', body }),
       invalidatesTags: ['PaymentMethod'],
     }),
+
     updatePaymentMethod: builder.mutation<
       PaymentMethod,
       { paymentMethodId: string; body: Partial<PaymentMethod> }

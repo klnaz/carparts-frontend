@@ -11,7 +11,7 @@ interface AddressInfoProps {
   onAddAddressClick: () => void;
 }
 
-const AddressInfo = ({ onAddAddressClick }: AddressInfoProps): JSX.Element => {
+const AddressInfo = ({ onAddAddressClick }: AddressInfoProps) => {
   const { data: addressesData, isLoading, isError, error } = useGetAddressesQuery();
   const [deleteAddress] = useDeleteAddressMutation();
 

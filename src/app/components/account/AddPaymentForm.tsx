@@ -11,7 +11,7 @@ interface AddPaymentFormProps {
 const AddPaymentForm = ({
   onPaymentAdded,
   onCancel,
-}: AddPaymentFormProps): JSX.Element => {
+}: AddPaymentFormProps) => {
   const [createPaymentMethod, { isLoading }] = useCreatePaymentMethodMutation();
 
   const [cardholderName, setCardholderName] = useState("");
@@ -20,6 +20,7 @@ const AddPaymentForm = ({
   const [expiryYear, setExpiryYear] = useState("");
   const [cvv, setCvv] = useState("");
   const [cardType, setCardType] = useState("");
+  const [isPrimary, setIsPrimary] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -29,15 +30,20 @@ const AddPaymentForm = ({
         cardholderName,
         cardNumber,
         expiryMonth,
-        expiryYear,
+        expiryYear: parseInt(expiryYear, 10),
         cvv,
         cardType,
+        isPrimary,
       }).unwrap();
       toast.success("Ödeme yöntemi başarıyla eklendi.");
       onPaymentAdded();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error adding payment method: ", error);
-      toast.error(error.data?.message || "Ödeme yöntemi eklenirken bir hata oluştu.");
+      let errorMessage = "Ödeme yöntemi eklenirken bir hata oluştu.";
+      if (error && typeof error === 'object' && 'data' in error && error.data && typeof error.data === 'object' && 'message' in error.data && typeof error.data.message === 'string') {
+        errorMessage = error.data.message;
+      }
+      toast.error(errorMessage);
     }
   };
 
@@ -45,7 +51,58 @@ const AddPaymentForm = ({
     <div className="p-4">
       <h2 className="text-xl font-semibold mb-4">Ödeme Yöntemi Ekle</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* input alanları aynı */}
+        <input
+          type="text"
+          placeholder="Card Type"
+          value={cardType}
+          onChange={(e) => setCardType(e.target.value)}
+          className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+        />
+        <input
+          type="text"
+          placeholder="Cardholder Name"
+          value={cardholderName}
+          onChange={(e) => setCardholderName(e.target.value)}
+          className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+        />
+        <input
+          type="text"
+          placeholder="Card Number"
+          value={cardNumber}
+          onChange={(e) => setCardNumber(e.target.value)}
+          className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+        />
+        <input
+          type="text"
+          placeholder="Expiry Month"
+          value={expiryMonth}
+          onChange={(e) => setExpiryMonth(e.target.value)}
+          className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+        />
+        <input
+          type="text"
+          placeholder="Expiry Year"
+          value={expiryYear}
+          onChange={(e) => setExpiryYear(e.target.value)}
+          className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+        />
+        <input
+          type="text"
+          placeholder="CVV"
+          value={cvv}
+          onChange={(e) => setCvv(e.target.value)}
+          className="w-full border border-gray-300 rounded px-2 py-1 text-xs"
+        />
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="isPrimary"
+            checked={isPrimary}
+            onChange={(e) => setIsPrimary(e.target.checked)}
+            className="mr-2"
+          />
+          <label htmlFor="isPrimary" className="text-xs">Set as primary</label>
+        </div>
         <div className="flex gap-4">
           <button
             type="submit"

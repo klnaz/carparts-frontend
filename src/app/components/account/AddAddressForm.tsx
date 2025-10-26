@@ -12,7 +12,7 @@ interface AddAddressFormProps {
 const AddAddressForm = ({
   onAddressAdded,
   onCancel,
-}: AddAddressFormProps): JSX.Element => {
+}: AddAddressFormProps) => {
   const [createAddress, { isLoading }] = useCreateAddressMutation();
 
   const [title, setTitle] = useState("");

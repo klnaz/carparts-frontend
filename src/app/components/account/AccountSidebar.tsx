@@ -9,7 +9,7 @@ interface AccountSidebarProps {
 const AccountSidebar = ({
   selectedItem,
   onMenuItemClick,
-}: AccountSidebarProps): JSX.Element => {
+}: AccountSidebarProps) => {
   const menuItems = [
     { id: "profile", label: "Profil Bilgilerim" },
     { id: "address", label: "Adres Bilgilerim" },

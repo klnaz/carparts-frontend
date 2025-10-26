@@ -16,7 +16,7 @@ const ProductDetailCard = ({
   price,
 }: ProductDetailProps) => {
   // boş image gelirse placeholder kullan
-  const imageSrc = image || "/placeholder.png";
+  const imageSrc = image || "/placeholder.svg";
 
   return (
     <div className="flex flex-col sm:flex-row gap-6 bg-white border border-gray-200 p-6 rounded-xl shadow-sm">

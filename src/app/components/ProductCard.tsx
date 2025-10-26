@@ -16,7 +16,7 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, onImageClick }: ProductCardProps) => {
   // boş image gelirse placeholder kullan
-  const imageSrc = product.image || "/placeholder.png";
+  const imageSrc = product.image || "/placeholder.svg";
 
   return (
     <div className="border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all bg-white">

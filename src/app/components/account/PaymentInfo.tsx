@@ -11,7 +11,7 @@ interface PaymentInfoProps {
   onAddPaymentClick: () => void;
 }
 
-const PaymentInfo = ({ onAddPaymentClick }: PaymentInfoProps): JSX.Element => {
+const PaymentInfo = ({ onAddPaymentClick }: PaymentInfoProps) => {
   const {
     data: paymentData,
     isLoading,
