@@ -1,27 +1,58 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ES2022",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    // ⚡ baseUrl ve paths kalmalı
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": [
+        "*"
+      ],
+      "@components/*": [
+        "app/components/*"
+      ],
+      "@redux/*": [
+        "redux/*"
+      ]
+    },
+    "allowSyntheticDefaultImports": true,
+    "ignoreDeprecations": "6.0",
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "types": [
+      "react",
+      "react-dom"
+    ],
     "plugins": [
       {
         "name": "next"
       }
-    ],
-    "paths": {
-      "@/*": ["./src/*"]
-    }
+    ]
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "next-env.d.ts",
+    ".next/types/**/*.ts"
+, "tailwind.config.js"  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

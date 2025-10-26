@@ -1,7 +1,18 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**", // tüm HTTPS görsellerine izin ver
+      },
+      {
+        protocol: "http",
+        hostname: "**", // gerekirse HTTP için de (örnek: yerel sunucu)
+      },
+    ],
+  },
 };
 
 export default nextConfig;
