@@ -9,7 +9,7 @@ const nextConfig = {
       },
       {
         protocol: "http",
-        hostname: "**", // gerekirse HTTP için de (örnek: yerel sunucu)
+        hostname: "**", // tüm HTTP görsellerine izin ver
       },
     ],
   },

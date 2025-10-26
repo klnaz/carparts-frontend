@@ -16,9 +16,8 @@
     "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
-    // ⚡ baseUrl ve paths kalmalı
     "baseUrl": "./src",
     "paths": {
       "@/*": [
@@ -47,11 +46,12 @@
     ]
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     "next-env.d.ts",
-    ".next/types/**/*.ts"
-, "tailwind.config.js"  ],
+    ".next\\dev/types/**/*.ts",
+    ".next\\dev/types/**/*.ts"
+  ],
   "exclude": [
     "node_modules"
   ]
