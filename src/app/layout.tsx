@@ -10,6 +10,7 @@ import { store } from "@/redux/store";
 import "./globals.css";
 
 import { Montserrat } from "next/font/google";
+import OurPolicy from "./components/OurPolicy";
 
 // Montserrat fontunu yükle
 const montserrat = Montserrat({
@@ -34,6 +35,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <main className="flex-1 px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw] py-6">
             {children}
           </main>
+                    <OurPolicy />
+
           <Footer />
         </Provider>
       </body>
