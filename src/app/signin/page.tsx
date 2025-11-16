@@ -7,24 +7,13 @@ import { useLoginMutation, useRegisterMutation } from "@/redux/api/authApi";
 import { useDispatch, useSelector } from "react-redux";
 import { setToken, setUser } from "@/redux/slices/authSlice";
 import { RootState } from "@/redux/store";
-import { User as UserType } from "@/types/user"; // Projedeki User tipi
+import { User as UserType } from "@/types/user";
 
 interface ApiUser {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
-}
-
-interface AuthResponse {
-  accessToken: { token: string };
-  user: ApiUser;
-  message?: string;
-}
-
-interface ApiError {
-  data?: { message?: string };
-  error?: string;
 }
 
 const SignInAndUp: React.FC = () => {
@@ -52,42 +41,61 @@ const SignInAndUp: React.FC = () => {
     email: apiUser.email,
   });
 
+  const extractToken = (data: any): string | null => {
+    return (
+      data?.accessToken?.token || // { accessToken: { token: "" }}
+      data?.accessToken ||        // { accessToken: "" }
+      data?.token ||              // { token: "" }
+      data?.jwt ||                // { jwt: "" }
+      null
+    );
+  };
+
   const onSubmitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     toast.dismiss();
 
     try {
       if (currentState === "Giriş Yap") {
-        const response = await login({ email: email.trim(), password }).unwrap();
-        const data = response as AuthResponse;
+        const rawResponse = await login({ email: email.trim(), password });
+        const response = rawResponse?.data || rawResponse;
 
-        const user: UserType = mapApiUserToUserType(data.user);
+        const token = extractToken(response);
+        if (!token) throw new Error("API token bilgisi alınamadı.");
 
-        dispatch(setToken(data.accessToken.token));
+        const user: UserType = mapApiUserToUserType(response.user);
+
+        dispatch(setToken(token));
         dispatch(setUser(user));
-        toast.success(data.message || "Giriş başarılı!");
+
+        toast.success(response.message || "Giriş başarılı!");
         router.push("/");
       } else {
-        const response = await register({
+        const rawResponse = await register({
           first_name: userFirstName.trim(),
           last_name: userLastName.trim(),
           email: email.trim(),
           password,
-        }).unwrap();
+        });
 
-        const data = response as AuthResponse;
-        toast.success(data.message || "Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
+        const response = rawResponse?.data || rawResponse;
+        toast.success(response.message || "Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
+
         setCurrentState("Giriş Yap");
         setUserFirstName("");
         setUserLastName("");
         setEmail("");
         setPassword("");
       }
-    } catch (error: unknown) {
-      const err = error as ApiError;
-      const message = err.data?.message || err.error || "Bir hata oluştu. Lütfen tekrar deneyin.";
+    } catch (error: any) {
+      const message =
+        error?.data?.message ||
+        error?.error ||
+        error?.message ||
+        "Bir hata oluştu. Lütfen tekrar deneyin.";
+
       toast.error(message);
-      console.error("Auth error:", err);
+      console.error("Auth error:", error);
     }
   };
 
