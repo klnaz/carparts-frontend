@@ -13,6 +13,7 @@ export interface Product {
   image?: string;
   BRAND?: string;
   CAR_BRAND?: string;
+  discount?: number;
 }
 
 interface ProductCardProps {
@@ -40,6 +41,11 @@ const ProductCard = ({ product, onImageClick }: ProductCardProps) => {
 
   return (
     <div className="group bg-white rounded-xl shadow-md hover:shadow-lg transition overflow-hidden flex flex-col w-44 sm:w-52 md:w-60 relative">
+      {product.discount && (
+        <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+          %{product.discount}
+        </div>
+      )}
       {/* Ürün Görseli */}
       <div
         className="relative w-full h-48 bg-white cursor-pointer"
@@ -84,9 +90,22 @@ const ProductCard = ({ product, onImageClick }: ProductCardProps) => {
           </p>
         )}
 
-        <p className="text-red-600 font-bold mt-1 text-sm sm:text-lg">
-          {product.price.toLocaleString("tr-TR")} ₺
-        </p>
+        <div className="flex items-center gap-2 mt-1">
+          {product.discount ? (
+            <>
+              <p className="text-gray-500 line-through text-sm">
+                {(product.price).toLocaleString("tr-TR")} ₺
+              </p>
+              <p className="text-red-600 font-bold text-sm sm:text-lg">
+                {(product.price * (1 - product.discount / 100)).toLocaleString("tr-TR")} ₺
+              </p>
+            </>
+          ) : (
+            <p className="text-red-600 font-bold text-sm sm:text-lg">
+              {product.price.toLocaleString("tr-TR")} ₺
+            </p>
+          )}
+        </div>
 
         <button
           onClick={handleAddToCart}
@@ -105,5 +124,6 @@ const ProductCard = ({ product, onImageClick }: ProductCardProps) => {
     </div>
   );
 };
+
 
 export default ProductCard;

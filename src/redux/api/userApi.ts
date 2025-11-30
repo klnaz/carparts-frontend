@@ -1,6 +1,14 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from '../store';
-import { User } from '@/types/user';
+
+// Backend'in gerçekten döndürdüğü tip
+export interface ApiUser {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  phone: string;
+}
 
 export const userApi = createApi({
   reducerPath: 'userApi',
@@ -13,26 +21,36 @@ export const userApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    getUserProfile: builder.query<User, void>({
-      query: () => '/',
+    // PROFİL GETİR
+    getUserProfile: builder.query<ApiUser, void>({
+      query: () => '/', // GET /users/
     }),
-    updateUser: builder.mutation<User, Partial<User>>({
+
+    // PROFİL GÜNCELLE
+    updateUser: builder.mutation<ApiUser, Partial<ApiUser>>({
       query: (body) => ({
-        url: '/',
+        url: '/',          // PUT /users/
         method: 'PUT',
         body,
       }),
     }),
-    changePassword: builder.mutation<void, { oldPassword: string; newPassword: string }>({
+
+    // ŞİFRE DEĞİŞTİR
+    changePassword: builder.mutation<
+      void,
+      { oldPassword: string; newPassword: string }
+    >({
       query: (body) => ({
         url: '/password',
         method: 'PUT',
         body,
       }),
     }),
+
+    // HESAP SİL
     deleteUser: builder.mutation<void, void>({
       query: () => ({
-        url: '/',
+        url: '/',          // DELETE /users/
         method: 'DELETE',
       }),
     }),

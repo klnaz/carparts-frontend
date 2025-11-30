@@ -9,12 +9,7 @@ import { setToken, setUser } from "@/redux/slices/authSlice";
 import { RootState } from "@/redux/store";
 import { User as UserType } from "@/types/user";
 
-interface ApiUser {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-}
+
 
 const SignInAndUp: React.FC = () => {
   const router = useRouter();
@@ -34,10 +29,10 @@ const SignInAndUp: React.FC = () => {
     if (token) router.push("/");
   }, [token, router]);
 
-  const mapApiUserToUserType = (apiUser: ApiUser): UserType => ({
+  const mapApiUserToUserType = (apiUser: any): UserType => ({
     id: apiUser.id,
-    name: apiUser.first_name,
-    surname: apiUser.last_name,
+    name: apiUser.firstName,
+    surname: apiUser.lastName,
     email: apiUser.email,
   });
 
@@ -58,27 +53,36 @@ const SignInAndUp: React.FC = () => {
     try {
       if (currentState === "Giriş Yap") {
         const rawResponse = await login({ email: email.trim(), password });
-        const response = rawResponse?.data || rawResponse;
+        const response = rawResponse?.data;
+        if (!response?.success) {
+          throw new Error(response?.message || "Bir hata oluştu.");
+        }
 
-        const token = extractToken(response);
-        if (!token) throw new Error("API token bilgisi alınamadı.");
+        const token = extractToken(response.data);
+        if (!token) {
+          throw new Error("API token bilgisi alınamadı.");
+        }
 
-        const user: UserType = mapApiUserToUserType(response.user);
+        const user: UserType = mapApiUserToUserType(response.data.user);
 
         dispatch(setToken(token));
         dispatch(setUser(user));
 
-        toast.success(response.message || "Giriş başarılı!");
+        toast.success(response.data.message || "Giriş başarılı!");
         router.push("/");
       } else {
         const rawResponse = await register({
-          first_name: userFirstName.trim(),
-          last_name: userLastName.trim(),
+          firstName: userFirstName.trim(),
+          lastName: userLastName.trim(),
           email: email.trim(),
           password,
         });
 
-        const response = rawResponse?.data || rawResponse;
+        const response = rawResponse?.data;
+        if (!response?.success) {
+          throw new Error(response?.message || "Kayıt sırasında bir hata oluştu.");
+        }
+        
         toast.success(response.message || "Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
 
         setCurrentState("Giriş Yap");

@@ -13,7 +13,7 @@ interface PaymentInfoProps {
 
 const PaymentInfo = ({ onAddPaymentClick }: PaymentInfoProps) => {
   const {
-    data: paymentData,
+    data: rawPaymentData,
     isLoading,
     isError,
     error,
@@ -21,9 +21,17 @@ const PaymentInfo = ({ onAddPaymentClick }: PaymentInfoProps) => {
 
   const [deletePaymentMethod] = useDeletePaymentMethodMutation();
 
+  // ⭐ GÜVENLİ DÖNÜŞÜM → BACKEND NASIL DÖNERSE DÖNSÜN ARRAY'E ÇEVİRİYORUZ
+  const paymentData: PaymentMethod[] = Array.isArray(rawPaymentData)
+    ? rawPaymentData
+    : Array.isArray(rawPaymentData?.methods)
+    ? rawPaymentData.methods
+    : Array.isArray(rawPaymentData?.data)
+    ? rawPaymentData.data
+    : [];
+
   const handleDeletePayment = async (id: string) => {
-    const confirmed = window.confirm("Bu ödeme yöntemini silmek istediğinize emin misiniz?");
-    if (!confirmed) return;
+    if (!window.confirm("Bu ödeme yöntemini silmek istediğinize emin misiniz?")) return;
 
     try {
       await deletePaymentMethod(id).unwrap();
@@ -58,7 +66,7 @@ const PaymentInfo = ({ onAddPaymentClick }: PaymentInfoProps) => {
     <div className="p-4">
       <h2 className="text-xl font-semibold mb-4">Ödeme Bilgilerim</h2>
 
-      {!paymentData || paymentData.length === 0 ? (
+      {paymentData.length === 0 ? (
         <p className="text-gray-600 text-xs mb-4">
           Henüz kayıtlı bir kartınız yok.
         </p>

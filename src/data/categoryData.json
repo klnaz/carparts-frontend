@@ -1,0 +1,58 @@
+[
+  {
+    "name": "Motor Parçaları",
+    "subcategories": [
+      {
+        "name": "Ateşleme & Yakıt",
+        "items": ["Buji", "Bobin", "Yakıt Pompası", "Enjektör"]
+      },
+      {
+        "name": "Filtreler",
+        "items": ["Yağ Filtresi", "Hava Filtresi", "Polen Filtresi", "Yakıt Filtresi"]
+      },
+      {
+        "name": "Triger & Gergi",
+        "items": ["Triger Seti", "V Kayışı", "Gergi Bilyası"]
+      }
+    ]
+  },
+  {
+    "name": "Fren Sistemleri",
+    "subcategories": [
+      {
+        "name": "Fren Disk & Balata",
+        "items": ["Fren Diski", "Ön Fren Balatası", "Arka Fren Balatası"]
+      },
+      {
+        "name": "Hidrolik & Merkez",
+        "items": ["Fren Merkezi", "Fren Hidroliği", "Fren Hortumu"]
+      }
+    ]
+  },
+  {
+    "name": "Elektrik & Aydınlatma",
+    "subcategories": [
+      {
+        "name": "Aydınlatma",
+        "items": ["Far", "Stop Lambası", "Sinyal Lambası", "Ampul"]
+      },
+      {
+        "name": "Akü & Şarj",
+        "items": ["Akü", "Alternatör", "Marş Motoru"]
+      }
+    ]
+  },
+  {
+    "name": "Aksesuarlar",
+    "subcategories": [
+      {
+        "name": "İç Aksesuarlar",
+        "items": ["Paspas", "Koltuk Kılıfı", "Direksiyon Kılıfı"]
+      },
+      {
+        "name": "Dış Aksesuarlar",
+        "items": ["Silecek", "Jant Kapağı", "Koruma Çıtası"]
+      }
+    ]
+  }
+]
