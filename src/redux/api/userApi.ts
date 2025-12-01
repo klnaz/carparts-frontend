@@ -1,7 +1,7 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { RootState } from '../store';
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { RootState } from "../store";
 
-// Backend'in gerçekten döndürdüğü tip
+// Backend'den gelen profilin normalize edilmiş tipi
 export interface ApiUser {
   id: string;
   email: string;
@@ -11,28 +11,44 @@ export interface ApiUser {
 }
 
 export const userApi = createApi({
-  reducerPath: 'userApi',
+  reducerPath: "userApi",
   baseQuery: fetchBaseQuery({
     baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/users`,
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.token;
-      if (token) headers.set('authorization', `Bearer ${token}`);
+      if (token) headers.set("authorization", `Bearer ${token}`);
       return headers;
     },
   }),
+  tagTypes: ["User"],
   endpoints: (builder) => ({
     // PROFİL GETİR
     getUserProfile: builder.query<ApiUser, void>({
-      query: () => '/', // GET /users/
+      query: () => "/", // GET /users/
+      // ❗ Backend ne dönerse dönsün, burada tek formata çeviriyoruz
+      transformResponse: (response: any): ApiUser => {
+        // Bazı backend’ler { user: {...} } veya { data: {...} } döner
+        const raw = response?.user ?? response?.data ?? response;
+
+        return {
+          id: raw.id,
+          email: raw.email ?? "",
+          first_name: raw.first_name ?? raw.name ?? "",
+          last_name: raw.last_name ?? raw.surname ?? "",
+          phone: raw.phone ?? raw.phone_number ?? "",
+        };
+      },
+      providesTags: ["User"],
     }),
 
     // PROFİL GÜNCELLE
     updateUser: builder.mutation<ApiUser, Partial<ApiUser>>({
       query: (body) => ({
-        url: '/',          // PUT /users/
-        method: 'PUT',
+        url: "/", // PUT /users/
+        method: "PUT",
         body,
       }),
+      invalidatesTags: ["User"], // ✅ update sonrası profil query'sini yeniden çeker
     }),
 
     // ŞİFRE DEĞİŞTİR
@@ -41,8 +57,8 @@ export const userApi = createApi({
       { oldPassword: string; newPassword: string }
     >({
       query: (body) => ({
-        url: '/password',
-        method: 'PUT',
+        url: "/password",
+        method: "PUT",
         body,
       }),
     }),
@@ -50,8 +66,8 @@ export const userApi = createApi({
     // HESAP SİL
     deleteUser: builder.mutation<void, void>({
       query: () => ({
-        url: '/',          // DELETE /users/
-        method: 'DELETE',
+        url: "/",
+        method: "DELETE",
       }),
     }),
   }),
