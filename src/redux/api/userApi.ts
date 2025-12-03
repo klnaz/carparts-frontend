@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { RootState } from "../store";
 
-// Backend'den gelen profilin normalize edilmiş tipi
+// Frontend'te kullanacağımız normalize edilmiş tip
 export interface ApiUser {
   id: string;
   email: string;
@@ -25,17 +25,26 @@ export const userApi = createApi({
     // PROFİL GETİR
     getUserProfile: builder.query<ApiUser, void>({
       query: () => "/", // GET /users/
-      // ❗ Backend ne dönerse dönsün, burada tek formata çeviriyoruz
       transformResponse: (response: any): ApiUser => {
-        // Bazı backend’ler { user: {...} } veya { data: {...} } döner
-        const raw = response?.user ?? response?.data ?? response;
+        // Backend genelde: { success, message, data }
+        const raw = response?.data ?? response?.user ?? response;
 
         return {
           id: raw.id,
           email: raw.email ?? "",
-          first_name: raw.first_name ?? raw.name ?? "",
-          last_name: raw.last_name ?? raw.surname ?? "",
-          phone: raw.phone ?? raw.phone_number ?? "",
+          // ⭐ Burada camelCase'den snake_case'e map yapıyoruz
+          first_name:
+            raw.first_name ??
+            raw.firstName ??
+            "",
+          last_name:
+            raw.last_name ??
+            raw.lastName ??
+            "",
+          phone:
+            raw.phone ??
+            raw.phoneNumber ??
+            "",
         };
       },
       providesTags: ["User"],
@@ -48,7 +57,27 @@ export const userApi = createApi({
         method: "PUT",
         body,
       }),
-      invalidatesTags: ["User"], // ✅ update sonrası profil query'sini yeniden çeker
+      invalidatesTags: ["User"],
+      transformResponse: (response: any): ApiUser => {
+        const raw = response?.data ?? response?.user ?? response;
+
+        return {
+          id: raw.id,
+          email: raw.email ?? "",
+          first_name:
+            raw.first_name ??
+            raw.firstName ??
+            "",
+          last_name:
+            raw.last_name ??
+            raw.lastName ??
+            "",
+          phone:
+            raw.phone ??
+            raw.phoneNumber ??
+            "",
+        };
+      },
     }),
 
     // ŞİFRE DEĞİŞTİR

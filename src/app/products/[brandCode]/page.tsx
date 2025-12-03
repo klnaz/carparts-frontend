@@ -4,9 +4,19 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { toast } from "react-toastify";
-import { ShoppingCart, Heart, Star, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  ShoppingCart,
+  Heart,
+  Star,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import "react-toastify/dist/ReactToastify.css";
 import bestSellersDataRaw from "../../../data/bestSellers.json";
+
+import { useDispatch } from "react-redux";
+import { addToCart } from "@/redux/slices/cartSlice";
 
 interface ProductDetail {
   BRANDCODE: string;
@@ -36,6 +46,8 @@ interface ProductDetail {
 export default function ProductDetailPage() {
   const params = useParams();
   const brandCode = decodeURIComponent((params as any)?.brandCode ?? "");
+
+  const dispatch = useDispatch();
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,18 +96,36 @@ export default function ProductDetailPage() {
   }, [brandCode]);
 
   if (loading)
-    return <div className="text-center mt-20 text-gray-600">Yükleniyor...</div>;
+    return (
+      <div className="text-center mt-20 text-gray-600">Yükleniyor...</div>
+    );
   if (error)
     return <div className="text-center mt-20 text-red-600">{error}</div>;
   if (!product)
     return <div className="text-center mt-20">Ürün bulunamadı</div>;
 
-  const images = product.images && product.images.length > 0 ? product.images : [product.image || "/placeholder.svg"];
+  const images =
+    product.images && product.images.length > 0
+      ? product.images
+      : [product.image || "/placeholder.svg"];
 
-  const handleNext = () => setCurrentImage((prev) => (prev + 1) % images.length);
-  const handlePrev = () => setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
+  const handleNext = () =>
+    setCurrentImage((prev) => (prev + 1) % images.length);
+  const handlePrev = () =>
+    setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
 
   const handleAddToCart = () => {
+    // Redux + cookie tabanlı sepete ekleme
+    dispatch(
+      addToCart({
+        id: product.BRANDCODE,
+        name: product.NAME,
+        price: product.price,
+        image: images[0],
+        quantity: quantity,
+      })
+    );
+
     toast.success(
       <div className="flex flex-col gap-2">
         <strong>{quantity} adet sepete eklendi</strong>
@@ -132,7 +162,9 @@ export default function ProductDetailPage() {
                   width={80}
                   height={80}
                   className={`w-20 h-20 object-cover rounded cursor-pointer border-2 ${
-                    currentImage === idx ? "border-orange-500" : "border-transparent"
+                    currentImage === idx
+                      ? "border-orange-500"
+                      : "border-transparent"
                   }`}
                   onClick={() => setCurrentImage(idx)}
                 />
@@ -145,13 +177,23 @@ export default function ProductDetailPage() {
         <div className="flex-1 flex flex-col gap-4">
           <h1 className="text-3xl font-bold mb-3">{product.NAME}</h1>
           <p className="text-gray-600 mb-4">{product.aciklama2}</p>
-          <p className="text-2xl font-semibold text-black mb-4">{product.price} ₺</p>
+          <p className="text-2xl font-semibold text-black mb-4">
+            {product.price} ₺
+          </p>
 
           <div className="text-sm text-gray-700 space-y-1">
-            <p><b>Marka:</b> {product.BRAND}</p>
-            <p><b>Grubu:</b> {product.grubu}</p>
-            <p><b>OEM Kodu:</b> {product.ozelKodu1}</p>
-            <p><b>Stok:</b> {product.STOCK_QUANTITY}</p>
+            <p>
+              <b>Marka:</b> {product.BRAND}
+            </p>
+            <p>
+              <b>Grubu:</b> {product.grubu}
+            </p>
+            <p>
+              <b>OEM Kodu:</b> {product.ozelKodu1}
+            </p>
+            <p>
+              <b>Stok:</b> {product.STOCK_QUANTITY}
+            </p>
           </div>
 
           <div className="flex gap-4 mt-4 flex-wrap">
@@ -160,7 +202,7 @@ export default function ProductDetailPage() {
               min={1}
               max={product.STOCK_QUANTITY || 1}
               value={quantity}
-              onChange={(e) => setQuantity(Number(e.target.value))}
+              onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
               className="w-20 border rounded px-2 py-1 text-center"
             />
             <button
@@ -188,8 +230,12 @@ export default function ProductDetailPage() {
                 ))}
                 <span className="ml-2 text-gray-600">5.0 / 5</span>
               </div>
-              <p className="text-gray-700">"Ürün çok kaliteli, hızlı kargo ve paketleme mükemmel!"</p>
-              <p className="text-gray-700">"Fiyatına göre oldukça iyi. Tavsiye ederim."</p>
+              <p className="text-gray-700">
+                "Ürün çok kaliteli, hızlı kargo ve paketleme mükemmel!"
+              </p>
+              <p className="text-gray-700">
+                "Fiyatına göre oldukça iyi. Tavsiye ederim."
+              </p>
             </div>
           </div>
         </div>

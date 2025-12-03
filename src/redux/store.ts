@@ -4,6 +4,7 @@ import { userApi } from './api/userApi';
 import { addressApi } from './api/addressApi';
 import { paymentApi } from './api/paymentApi';
 import authReducer from './slices/authSlice';
+import cartReducer from "./slices/cartSlice";
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,8 @@ export const store = configureStore({
     [userApi.reducerPath]: userApi.reducer,
     [addressApi.reducerPath]: addressApi.reducer,
     [paymentApi.reducerPath]: paymentApi.reducer,
+    cart: cartReducer, // ⭐ BURAYI EKLİYORSUN
+
     auth: authReducer,
   },
   middleware: (getDefaultMiddleware) =>
