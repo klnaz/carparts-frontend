@@ -12,10 +12,15 @@ import Image from "next/image";
 import { FiTrash2 } from "react-icons/fi";
 import { HiOutlineShoppingBag } from "react-icons/hi";
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 const CartPage = () => {
   const dispatch = useDispatch();
+  const router = useRouter();
+
   const items = useSelector((state: RootState) => state.cart.items);
+  const { token } = useSelector((state: RootState) => state.auth);
 
   const { totalItems, totalPrice } = useMemo(() => {
     const totalItems = items.reduce((acc, item) => acc + item.quantity, 0);
@@ -44,6 +49,22 @@ const CartPage = () => {
   const handleClearCart = () => {
     if (!window.confirm("Sepetteki tüm ürünleri silmek istediğinize emin misiniz?")) return;
     dispatch(clearCart());
+  };
+
+  const handleContinue = () => {
+    // Kullanıcı login değilse → signin'e yönlendir
+    if (!token) {
+      toast.info("Devam etmek için lütfen giriş yapın.");
+      // Girişten sonra tekrar sepete dönebilmesi için redirect paramı
+      router.push("/signin?redirect=/sepetim");
+      return;
+    }
+
+    // Kullanıcı login ise → şimdilik sadece bilgi ver
+    // İleride burayı /odeme veya /teslimat adımına yönlendirebilirsin
+    toast.success("Devam ediliyor...");
+    // Örneğin:
+    // router.push("/odeme");
   };
 
   // 🧺 SEPET BOŞSA
@@ -182,12 +203,15 @@ const CartPage = () => {
             </span>
           </div>
 
+          {/* DEVAM ET BUTONU */}
           <button
+            onClick={handleContinue}
             className="w-full bg-gray-900 text-white py-2 rounded-md text-xs font-medium hover:bg-black transition-colors"
           >
             Devam Et
           </button>
 
+          {/* SEPETİ TEMİZLE */}
           <button
             onClick={handleClearCart}
             className="w-full mt-1 border border-gray-300 text-gray-700 py-2 rounded-md text-[11px] hover:bg-gray-50 transition-colors"
@@ -196,8 +220,9 @@ const CartPage = () => {
           </button>
 
           <p className="text-[10px] text-gray-500 mt-1">
-            Ödeme ve teslimat adımlarında adres bilgilerinizi ve ödeme
-            yöntemlerinizi seçerek siparişinizi tamamlayabilirsiniz.
+            Devam et butonuna tıkladığınızda, kayıtlı adres ve ödeme
+            bilgilerinizi kullanarak siparişinizi kolayca tamamlayabilirsiniz.
+            Giriş yapmamış kullanıcılar önce giriş sayfasına yönlendirilir.
           </p>
         </div>
       </div>
