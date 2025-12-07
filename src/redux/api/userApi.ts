@@ -1,13 +1,21 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { RootState } from "../store";
 
-// Frontend'te kullanacağımız normalize edilmiş tip
+// Frontend'te kullanacağımız normalize profil tipi
 export interface ApiUser {
   id: string;
   email: string;
   first_name: string;
   last_name: string;
   phone: string;
+}
+
+// Backend'e UPDATE için gönderilecek payload (Joi şemasıyla uyumlu)
+export interface UpdateUserPayload {
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  email?: string;
 }
 
 export const userApi = createApi({
@@ -24,71 +32,50 @@ export const userApi = createApi({
   endpoints: (builder) => ({
     // PROFİL GETİR
     getUserProfile: builder.query<ApiUser, void>({
-      query: () => "/", // GET /users/
+      query: () => "/",
+      // Backend ne dönerse dönsün normalize et
       transformResponse: (response: any): ApiUser => {
-        // Backend genelde: { success, message, data }
-        const raw = response?.data ?? response?.user ?? response;
+        const raw = response?.user ?? response?.data ?? response;
 
         return {
           id: raw.id,
           email: raw.email ?? "",
-          // ⭐ Burada camelCase'den snake_case'e map yapıyoruz
-          first_name:
-            raw.first_name ??
-            raw.firstName ??
-            "",
-          last_name:
-            raw.last_name ??
-            raw.lastName ??
-            "",
+          // Hem snake_case hem camelCase destekle
+          first_name: raw.first_name ?? raw.firstName ?? "",
+          last_name: raw.last_name ?? raw.lastName ?? "",
           phone:
             raw.phone ??
             raw.phoneNumber ??
+            raw.phone_number ??
             "",
         };
       },
       providesTags: ["User"],
     }),
 
-    // PROFİL GÜNCELLE
-    updateUser: builder.mutation<ApiUser, Partial<ApiUser>>({
+    // PROFİL GÜNCELLE (Joi: firstName, lastName, phoneNumber, email)
+    updateUser: builder.mutation<ApiUser, UpdateUserPayload>({
       query: (body) => ({
-        url: "/", // PUT /users/
+        url: "/",
         method: "PUT",
-        body,
+        body, // id göndermiyoruz, userId token'dan geliyor
       }),
       invalidatesTags: ["User"],
-      transformResponse: (response: any): ApiUser => {
-        const raw = response?.data ?? response?.user ?? response;
-
-        return {
-          id: raw.id,
-          email: raw.email ?? "",
-          first_name:
-            raw.first_name ??
-            raw.firstName ??
-            "",
-          last_name:
-            raw.last_name ??
-            raw.lastName ??
-            "",
-          phone:
-            raw.phone ??
-            raw.phoneNumber ??
-            "",
-        };
-      },
     }),
 
     // ŞİFRE DEĞİŞTİR
+    // Backend tarafında Joi şeması: { currentPassword, newPassword }
     changePassword: builder.mutation<
       void,
       { oldPassword: string; newPassword: string }
     >({
-      query: (body) => ({
+      query: ({ oldPassword, newPassword }) => ({
         url: "/password",
         method: "PUT",
-        body,
+        body: {
+          currentPassword: oldPassword, // ❗ backend'in beklediği alan ismi
+          newPassword,
+        },
       }),
     }),
 
