@@ -19,8 +19,9 @@ import "react-toastify/dist/ReactToastify.css";
 
 import bestSellersDataRaw from "../../../data/bestSellers.json";
 
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/redux/slices/cartSlice";
+import { RootState } from "@/redux/store";
 
 interface ProductDetail {
   BRANDCODE: string;
@@ -77,6 +78,10 @@ export default function ProductDetailPage() {
 
   const dispatch = useDispatch();
 
+  // 🔐 Login durumu (OEM gösterimi için)
+  const token = useSelector((state: RootState) => state.auth.token);
+  const isLoggedIn = Boolean(token);
+
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -116,7 +121,9 @@ export default function ProductDetailPage() {
 
   useEffect(() => {
     if (!brandCode) return;
+
     const found = bestSellersData.find((p) => p.BRANDCODE === brandCode);
+
     if (!found) {
       setError("Ürün bulunamadı.");
       setProduct(null);
@@ -154,8 +161,26 @@ export default function ProductDetailPage() {
   const inStock =
     typeof product.STOCK_QUANTITY === "number" && product.STOCK_QUANTITY > 0;
 
+  // 🔐 OEM formatlama: login yoksa sadece ilk 3 hane + maskeleme
+  const formatOem = (oem?: string) => {
+    if (!oem) return "";
+
+    if (isLoggedIn) return oem;
+
+    if (oem.length <= 3) return `${oem}******`;
+
+    return `${oem.slice(0, 3)}******`;
+  };
+
+  const displayOem = formatOem(product.ozelKodu1);
+  const showOemHint = !!product.ozelKodu1 && !isLoggedIn;
+  const oemHintText = showOemHint
+    ? "Tüm OEM kodunu görmek için giriş yapın."
+    : "";
+
   const handleNext = () =>
     setCurrentImage((prev) => (prev + 1) % images.length);
+
   const handlePrev = () =>
     setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
 
@@ -307,7 +332,9 @@ export default function ProductDetailPage() {
               {product.NAME}
             </h1>
             {product.secondaryNAME && (
-              <p className="text-sm text-gray-500">{product.secondaryNAME}</p>
+              <p className="text-sm text-gray-500">
+                {product.secondaryNAME}
+              </p>
             )}
           </div>
 
@@ -351,7 +378,12 @@ export default function ProductDetailPage() {
             {product.ozelKodu1 && (
               <p>
                 <span className="font-medium">OEM Kodu: </span>
-                {product.ozelKodu1}
+                <span className="font-mono">{displayOem}</span>
+                {showOemHint && (
+                  <span className="ml-2 text-[11px] text-gray-500">
+                    (Tümünü görmek için giriş yapın)
+                  </span>
+                )}
               </p>
             )}
             {product.grubu && (
@@ -429,14 +461,15 @@ export default function ProductDetailPage() {
                 onClick={handleFavorite}
                 className="flex gap-2 items-center border px-4 py-2 rounded-lg hover:bg-gray-50 transition text-sm"
               >
-                <Heart size={18} className="text-red-600" /> Favorilere Ekle
+                <Heart size={18} className="text-red-600" />
+                Favorilere Ekle
               </button>
             </div>
 
             <p className="text-[11px] text-gray-500 flex items-center gap-1">
               <Info size={14} className="text-gray-400" />
-              Saat 16:00&apos;ya kadar verilen siparişler aynı gün kargoya verilir.
-              Yanlış parça durumunda iade/değişim hakkınız vardır.
+              Saat 16:00&apos;ya kadar verilen siparişler aynı gün kargoya
+              verilir. Yanlış parça durumunda iade/değişim hakkınız vardır.
             </p>
           </div>
         </div>
@@ -444,7 +477,7 @@ export default function ProductDetailPage() {
 
       {/* Alt içerik: Teknik detay + açıklama + SSS + yorumlar */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Sol taraf: Teknik bilgiler + açıklama + SSS + yorumlar */}
+        {/* Sol taraf */}
         <div className="lg:col-span-2 space-y-6">
           {/* Teknik Bilgiler */}
           <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm">
@@ -456,7 +489,14 @@ export default function ProductDetailPage() {
               {product.ozelKodu1 && (
                 <div className="flex justify-between border-b py-1">
                   <span className="text-gray-500">OEM Kodu</span>
-                  <span className="font-medium">{product.ozelKodu1}</span>
+                  <span className="font-medium font-mono">
+                    {displayOem}
+                  </span>
+                </div>
+              )}
+              {showOemHint && (
+                <div className="md:col-span-2 text-[11px] text-gray-500 pt-1">
+                  {oemHintText}
                 </div>
               )}
               {product.barkodu && (
@@ -489,7 +529,9 @@ export default function ProductDetailPage() {
               {product.secondaryNAME && (
                 <div className="flex justify-between border-b py-1">
                   <span className="text-gray-500">Güncelleme / Not</span>
-                  <span className="font-medium">{product.secondaryNAME}</span>
+                  <span className="font-medium">
+                    {product.secondaryNAME}
+                  </span>
                 </div>
               )}
             </div>
@@ -615,21 +657,27 @@ export default function ProductDetailPage() {
         {/* Sağ: Sipariş & Garanti kutuları */}
         <div className="space-y-4">
           <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm text-sm space-y-3">
-            <h3 className="font-semibold text-gray-900">Sipariş & Teslimat</h3>
+            <h3 className="font-semibold text-gray-900">
+              Sipariş & Teslimat
+            </h3>
             <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
               <li>Saat 16:00&apos;ya kadar aynı gün kargo.</li>
-              <li>Türkiye&apos;nin her yerine hızlı teslimat.</li>
+              <li>Türkiye&apos;nın her yerine hızlı teslimat.</li>
               <li>Orijinal / muadil ürün tedariki.</li>
               <li>14 gün içinde iade / değişim imkanı.</li>
             </ul>
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm text-sm space-y-3">
-            <h3 className="font-semibold text-gray-900">Garanti & Destek</h3>
+            <h3 className="font-semibold text-gray-900">
+              Garanti & Destek
+            </h3>
             <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
               <li>Ürünler faturalı ve garantilidir.</li>
               <li>Montaj öncesi ürün kontrolü yapınız.</li>
-              <li>Destek için WhatsApp hattımızdan bize ulaşabilirsiniz.</li>
+              <li>
+                Destek için WhatsApp hattımızdan bize ulaşabilirsiniz.
+              </li>
             </ul>
           </div>
         </div>
@@ -646,6 +694,7 @@ export default function ProductDetailPage() {
               const spInStock =
                 typeof sp.STOCK_QUANTITY === "number" &&
                 sp.STOCK_QUANTITY > 0;
+
               return (
                 <Link
                   key={sp.BRANDCODE}

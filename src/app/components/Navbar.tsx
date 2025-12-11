@@ -35,12 +35,14 @@ const Navbar = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // 🔽 Hesap dropdown için kontrollü açık/kapalı state
+  // Hesap dropdown state
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const accountCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Arama state
+  const [searchTerm, setSearchTerm] = useState("");
+
   const handleAccountMouseEnter = () => {
-    // Kapanma timer'ı varsa iptal et
     if (accountCloseTimer.current) {
       clearTimeout(accountCloseTimer.current);
       accountCloseTimer.current = null;
@@ -49,24 +51,42 @@ const Navbar = () => {
   };
 
   const handleAccountMouseLeave = () => {
-    // Hemen kapatma, küçük bir gecikme ile
     accountCloseTimer.current = setTimeout(() => {
       setIsAccountOpen(false);
     }, 150);
+  };
+
+  const handleSearchSubmit = () => {
+    const q = searchTerm.trim();
+    if (!q) return;
+    router.push(`/arama?q=${encodeURIComponent(q)}`);
+    setMobileMenuOpen(false);
+  };
+
+  const handleSearchKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSearchSubmit();
+    }
   };
 
   return (
     <div className="w-full bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto flex items-center justify-between py-4 px-4 md:px-6">
         {/* Logo */}
-        <Link href="/" className="text-3xl font-bold tracking-wider text-black">
+        <Link
+          href="/"
+          className="text-3xl font-bold tracking-wider text-black"
+        >
           Ko<span className="text-red-600">parts</span>
         </Link>
 
-        {/* Search */}
+        {/* Search - Desktop */}
         <div className="hidden md:flex items-center text-sm gap-2 border border-gray-300 bg-gray-100 px-4 rounded-xl flex-1 max-w-2xl mx-6">
           <CgSearch
-            onClick={() => inputRef.current?.focus()}
+            onClick={handleSearchSubmit}
             className="cursor-pointer text-gray-500"
             size={20}
           />
@@ -74,7 +94,10 @@ const Navbar = () => {
             ref={inputRef}
             className="py-2 w-full bg-transparent outline-none placeholder-gray-500"
             type="text"
-            placeholder="Parça, oem numara veya marka ara"
+            placeholder="Parça, OEM numara veya marka ara"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
           />
         </div>
 
@@ -220,11 +243,18 @@ const Navbar = () => {
 
             {/* Search Mobile */}
             <div className="flex items-center text-sm gap-2 border border-gray-300 bg-gray-100 px-3 rounded-lg mb-4">
-              <CgSearch size={20} className="text-gray-500" />
+              <CgSearch
+                size={20}
+                className="text-gray-500 cursor-pointer"
+                onClick={handleSearchSubmit}
+              />
               <input
                 className="py-2 w-full bg-transparent outline-none"
                 type="text"
-                placeholder="Parça, oem numara veya marka ara"
+                placeholder="Parça, OEM numara veya marka ara"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
               />
             </div>
 
