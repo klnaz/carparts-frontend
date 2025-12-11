@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 
 import { FiTruck, FiShield, FiPhoneCall } from "react-icons/fi";
 import { BsBuildingGear } from "react-icons/bs";
@@ -11,9 +11,40 @@ import { MdOutlineTune } from "react-icons/md";
 
 import ProductCard, { Product } from "./components/ProductCard";
 import bestSellersDataRaw from "../data/bestSellers.json";
+import { getRecentlyViewed } from "@/utils/recentlyViewed";
+// Binek araç markaları standı için liste (public/car-logos/*.png)
+const carBrandLogos = [
+  { code: "volkswagen", name: "Volkswagen", file: "Volkswagen.png" },
+  { code: "renault", name: "Renault", file: "Renault.png" },
+  { code: "fiat", name: "Fiat", file: "Fiat.png" },
+  { code: "toyota", name: "Toyota", file: "toyota.png" },
+  { code: "hyundai", name: "Hyundai", file: "hyundai.png" },
+  { code: "kia", name: "Kia", file: "kia.png" },
+  { code: "opel", name: "Opel", file: "opel.png" },
+  { code: "peugeot", name: "Peugeot", file: "Peugeot.png" }, // dosya adın "peugegot.png" ise buna göre
+  { code: "citroen", name: "Citroën", file: "citroen.png" },
+  { code: "seat", name: "SEAT", file: "seat.png" },
+  { code: "skoda", name: "Škoda", file: "skoda.png" },
+  { code: "lada", name: "Lada", file: "lada.png" },
+  { code: "tofas", name: "Tofaş", file: "tofas.png" },
+];
+
+// Son görüntülenenler için tip
+interface RecentlyViewedItem {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
+  BRAND?: string;
+  CAR_BRAND?: string;
+}
 
 const HomePage = () => {
   const router = useRouter();
+
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>(
+    []
+  );
 
   // bestSellers.json -> ProductCard tipine map
   const bestSellers: Product[] = useMemo(
@@ -32,9 +63,44 @@ const HomePage = () => {
 
   const topBestSellers = bestSellers.slice(0, 8);
 
+  // Son görüntülenenleri client tarafında çek
+  useEffect(() => {
+    try {
+      const items = getRecentlyViewed();
+      setRecentlyViewed(items);
+    } catch (err) {
+      console.error("Son görüntülenenler okunamadı:", err);
+    }
+  }, []);
+
   const handleProductClick = (brandCode: string) => {
     router.push(`/products/${encodeURIComponent(brandCode)}`);
   };
+
+  // Binek araç markaları standı için liste
+  const passengerCarBrands = [
+    { code: "vw", name: "Volkswagen" },
+    { code: "audi", name: "Audi" },
+    { code: "bmw", name: "BMW" },
+    { code: "mercedes", name: "Mercedes-Benz" },
+    { code: "renault", name: "Renault" },
+    { code: "fiat", name: "Fiat" },
+    { code: "peugeot", name: "Peugeot" },
+    { code: "citroen", name: "Citroën" },
+    { code: "opel", name: "Opel" },
+    { code: "toyota", name: "Toyota" },
+    { code: "honda", name: "Honda" },
+    { code: "hyundai", name: "Hyundai" },
+    { code: "kia", name: "Kia" },
+    { code: "ford", name: "Ford" },
+    { code: "skoda", name: "Škoda" },
+    { code: "seat", name: "SEAT" },
+    { code: "dacia", name: "Dacia" },
+    { code: "nissan", name: "Nissan" },
+  ];
+
+  // Not: Logo görsellerini /public/car-logos/{code}.svg altına koyabilirsin.
+  // Örn: /public/car-logos/vw.svg, /public/car-logos/audi.svg gibi.
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -47,13 +113,14 @@ const HomePage = () => {
               PROFESYONEL OTO YEDEK PARÇA TEDARİĞİ
             </p>
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight">
-              Aradığınız tüm <span className="text-red-500">oto yedek parçalar</span>  
-              tek noktada: Ko<span className="text-red-500">parts</span>
+              Aradığınız tüm{" "}
+              <span className="text-red-500">oto yedek parçalar</span> tek
+              noktada: Ko<span className="text-red-500">parts</span>
             </h1>
             <p className="text-sm md:text-base text-gray-300 max-w-xl">
               Binek ve ticari araçlar için geniş ürün gamı, hızlı teslimat ve
-              kurumsal tedarik çözümleri. Ustanızın güvendiği parçaları, kurumsal
-              hizmet kalitesiyle sunuyoruz.
+              kurumsal tedarik çözümleri. Ustanızın güvendiği parçaları,
+              kurumsal hizmet kalitesiyle sunuyoruz.
             </p>
 
             {/* CTA */}
@@ -133,9 +200,7 @@ const HomePage = () => {
                 </div>
                 <div className="flex gap-2">
                   <div className="flex-1 rounded-xl bg-gray-900/80 border border-gray-700 p-3">
-                    <p className="text-[11px] text-gray-400">
-                      Örnek arama:
-                    </p>
+                    <p className="text-[11px] text-gray-400">Örnek arama:</p>
                     <p className="text-xs font-mono bg-black/40 rounded-md mt-1 px-2 py-1 inline-block">
                       7701202057 &bull; RENAULT ÖN BALATA
                     </p>
@@ -158,13 +223,99 @@ const HomePage = () => {
                 Türkiye genelinde binlerce müşteri
               </p>
               <p className="text-[11px] text-gray-500">
-                Hem bireysel kullanıcılar hem servisler için sürdürülebilir tedarik
-                ortağı.
+                Hem bireysel kullanıcılar hem servisler için sürdürülebilir
+                tedarik ortağı.
               </p>
             </div>
           </div>
         </div>
       </section>
+{/* BİNEK ARAÇ LOGO STANDI */}
+<section className="bg-white border-b border-gray-100">
+  <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-4 flex flex-col gap-2">
+    <div className="flex items-center justify-between">
+      <p className="text-[12px] text-gray-500">
+        Binek araç markalarının geniş yelpazesinde ürün tedariği sağlıyoruz.
+      </p>
+      <span className="hidden sm:inline text-[11px] text-gray-400">
+        Logolar temsilidir, ürün stoğu modele göre değişiklik gösterebilir.
+      </span>
+    </div>
+
+    <div className="flex items-center gap-3 overflow-x-auto pb-2">
+      {carBrandLogos.map((brand) => (
+        <button
+          key={brand.code}
+          type="button"
+          className="flex items-center gap-2 min-w-[110px] h-12 px-3 rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition flex-shrink-0"
+          // istersen burada marka filtresine yönlendirebilirsin:
+          // onClick={() => router.push(`/search?brand=${brand.code}`)}
+        >
+          <div className="relative w-10 h-6">
+            <Image
+              src={`/car-logos/${brand.file}`}
+              alt={brand.name}
+              fill
+              sizes="40px"
+              className="object-contain"
+            />
+          </div>
+          <span className="text-[11px] font-medium text-gray-700">
+            {brand.name}
+          </span>
+        </button>
+      ))}
+    </div>
+  </div>
+</section>
+
+
+      {/* SON GÖRÜNTÜLENENLER */}
+      {recentlyViewed.length > 0 && (
+        <section className="max-w-[1400px] mx-auto px-4 md:px-6 pt-6 md:pt-8">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h2 className="text-lg md:text-xl font-semibold text-gray-900">
+                Son görüntüledikleriniz
+              </h2>
+              <p className="text-[12px] text-gray-500">
+                En son incelediğiniz ürünlere hızlıca geri dönün.
+              </p>
+            </div>
+            <span className="hidden sm:inline text-[11px] text-gray-400">
+              Tarayıcınızda saklanır, hesabınıza özel değildir.
+            </span>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-3">
+            {recentlyViewed.map((item) => (
+              <Link
+                key={item.id}
+                href={`/products/${encodeURIComponent(item.id)}`}
+                className="min-w-[160px] max-w-[180px] bg-white border border-gray-200 rounded-xl p-3 flex-shrink-0 hover:shadow-md hover:-translate-y-0.5 transition"
+              >
+                <div className="relative w-full aspect-square rounded-lg bg-gray-50 border border-gray-100 mb-2 overflow-hidden">
+                  <Image
+                    src={item.image || "/placeholder.svg"}
+                    alt={item.name}
+                    fill
+                    className="object-contain p-2"
+                  />
+                </div>
+                <p className="text-[11px] text-gray-500 line-clamp-1">
+                  {item.BRAND || item.CAR_BRAND || "Marka"}
+                </p>
+                <p className="text-xs font-medium text-gray-900 line-clamp-2 min-h-[32px]">
+                  {item.name}
+                </p>
+                <p className="text-sm font-semibold text-red-600 mt-1">
+                  {item.price.toLocaleString("tr-TR")} ₺
+                </p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CATEGORIES */}
       <section className="max-w-[1400px] mx-auto px-4 md:px-6 py-8 md:py-10">
@@ -256,8 +407,8 @@ const HomePage = () => {
               Çalıştığımız Bazı Markalar
             </h3>
             <p className="text-[12px] text-gray-500 max-w-lg">
-              Orijinal ve kaliteli muadil markalarla çalışıyor, tedarik zincirimizi
-              sürekli güncel tutuyoruz.
+              Orijinal ve kaliteli muadil markalarla çalışıyor, tedarik
+              zincirimizi sürekli güncel tutuyoruz.
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
               {["MGA", "EDGE", "ZEGEN", "RENAULT", "FİAT", "PEUGEOT"].map(
@@ -280,9 +431,9 @@ const HomePage = () => {
               Servisler & Filolar için Çözümler
             </h3>
             <p className="text-[12px] text-gray-300">
-              Düzenli alım yapan servisler, filo şirketleri ve kurumsal müşteriler
-              için özel fiyatlandırma, tahsisli temsilci ve stok planlama
-              hizmeti sunuyoruz.
+              Düzenli alım yapan servisler, filo şirketleri ve kurumsal
+              müşteriler için özel fiyatlandırma, tahsisli temsilci ve stok
+              planlama hizmeti sunuyoruz.
             </p>
             <button
               onClick={() => router.push("/kurumsal-teklif")}
@@ -322,8 +473,8 @@ const HomePage = () => {
             </h4>
             <p className="text-gray-500">
               Parçanın aracınızla uyumu hakkında emin değilseniz, sipariş
-              sonrası uzman ekibimizle WhatsApp veya telefon üzerinden görüşerek
-              destek alabilirsiniz.
+              sonrası uzman ekibimizle WhatsApp veya telefon üzerinden
+              görüşerek destek alabilirsiniz.
             </p>
           </div>
         </div>

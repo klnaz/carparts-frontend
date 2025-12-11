@@ -22,6 +22,7 @@ import bestSellersDataRaw from "../../../data/bestSellers.json";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/redux/slices/cartSlice";
 import { RootState } from "@/redux/store";
+import { addRecentlyViewed } from "@/utils/recentlyViewed";
 
 interface ProductDetail {
   BRANDCODE: string;
@@ -127,10 +128,22 @@ export default function ProductDetailPage() {
     if (!found) {
       setError("Ürün bulunamadı.");
       setProduct(null);
-    } else {
-      setProduct(found);
+      setLoading(false);
+      return;
     }
+
+    setProduct(found);
     setLoading(false);
+
+    // 🔁 Son görüntülenenler (localStorage)
+    addRecentlyViewed({
+      id: found.BRANDCODE,
+      name: found.NAME,
+      price: found.price,
+      image: found.image,
+      BRAND: found.BRAND,
+      CAR_BRAND: found.CAR_BRAND,
+    });
   }, [brandCode]);
 
   if (loading) {
@@ -662,7 +675,7 @@ export default function ProductDetailPage() {
             </h3>
             <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
               <li>Saat 16:00&apos;ya kadar aynı gün kargo.</li>
-              <li>Türkiye&apos;nın her yerine hızlı teslimat.</li>
+              <li>Türkiye&apos;nin her yerine hızlı teslimat.</li>
               <li>Orijinal / muadil ürün tedariki.</li>
               <li>14 gün içinde iade / değişim imkanı.</li>
             </ul>
