@@ -1,10 +1,12 @@
-import { SortOption } from "./useSearchLogic";
+"use client";
 
-export default function SearchSortBar({ logic }: any) {
+import type { SearchLogic, SortOption } from "./useSearchLogic";
+
+export default function SearchSortBar({ logic }: { logic: SearchLogic }) {
   return (
-    <div className="flex justify-end mb-4 text-xs">
+    <div className="flex items-center justify-end text-xs">
       <select
-        className="border rounded px-2 py-1"
+        className="border rounded-md px-2 py-1 bg-white"
         value={logic.sortBy}
         onChange={(e) => logic.setSortBy(e.target.value as SortOption)}
       >

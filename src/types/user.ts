@@ -1,8 +1,8 @@
 export interface User {
-  id: string;
-  name: string;
-  surname: string;
+  id?: string;
+  role?: string;
   email: string;
-  phone?: string;
-  // Buraya kullanıcı modeline göre diğer alanları ekleyebilirsin
+  firstName: string;
+  lastName: string;
+  phoneNumber: string | null;
 }

@@ -2,8 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { FiTruck, FiShield, FiPhoneCall } from "react-icons/fi";
 import { BsBuildingGear } from "react-icons/bs";
@@ -23,74 +22,91 @@ interface HomePageContentProps {
   topBestSellers: Product[];
 }
 
-const HomePageContent = ({
-  bestSellers,
-  topBestSellers,
-}: HomePageContentProps) => {
+const HomePageContent = ({ topBestSellers }: HomePageContentProps) => {
   const router = useRouter();
-  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>(
-    []
-  );
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewedItem[]>([]);
 
-  // Son görüntülenenleri client tarafında çek
   useEffect(() => {
     try {
       const items = getRecentlyViewed();
-      // getRecentlyViewed fonksiyonunun tipi RecentlyViewedItem[] olmalı
       setRecentlyViewed(items);
     } catch (err) {
       console.error("Son görüntülenenler okunamadı:", err);
     }
   }, []);
 
-  const handleProductClick = (brandCode: string) => {
-    router.push(`/products/${encodeURIComponent(brandCode)}`);
-  };
+  const handleProductClick = useCallback(
+    (brandCode: string) => {
+      router.push(`/products/${encodeURIComponent(brandCode)}`);
+    },
+    [router]
+  );
 
   return (
     <main className="min-h-screen bg-gray-50">
       {/* HERO */}
       <section className="bg-gradient-to-b from-gray-900 via-gray-900 to-gray-800 text-white">
-        <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-10 md:py-16 grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
+        <div
+          className="
+            max-w-[1400px] mx-auto
+            px-4 sm:px-6
+            py-8 sm:py-10 md:py-12 lg:py-16
+            grid grid-cols-1 lg:grid-cols-2
+            gap-8 lg:gap-10
+            items-center
+          "
+        >
           {/* Left */}
-          <div className="space-y-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
+          <div className="space-y-5 sm:space-y-6">
+            <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] text-gray-400">
               PROFESYONEL OTO YEDEK PARÇA TEDARİĞİ
             </p>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight">
+
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight">
               Aradığınız tüm{" "}
               <span className="text-red-500">oto yedek parçalar</span> tek
               noktada: Ko<span className="text-red-500">parts</span>
             </h1>
-            <p className="text-sm md:text-base text-gray-300 max-w-xl">
+
+            <p className="text-sm sm:text-base text-gray-300 max-w-xl">
               Binek ve ticari araçlar için geniş ürün gamı, hızlı teslimat ve
-              kurumsal tedarik çözümleri. Ustanızın güvendiği parçaları,
-              kurumsal hizmet kalitesiyle sunuyoruz.
+              kurumsal tedarik çözümleri. Ustanızın güvendiği parçaları, kurumsal
+              hizmet kalitesiyle sunuyoruz.
             </p>
 
             {/* ANA SAYFA ARAMA BARI → /search */}
-            <div className="mt-4">
+            <div className="pt-1">
               <HomeSearchBar />
             </div>
 
-            {/* CTA */}
-            <div className="flex flex-wrap gap-3">
+            {/* CTA (mobilde tam genişlik) */}
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3">
               <button
                 onClick={() => router.push("/search")}
-                className="px-5 py-2.5 rounded-full text-sm font-medium bg-red-600 hover:bg-red-700 text-white transition shadow-sm"
+                className="
+                  w-full sm:w-auto
+                  px-5 py-2.5 rounded-full text-sm font-medium
+                  bg-red-600 hover:bg-red-700 text-white transition shadow-sm
+                "
               >
                 Parça Bul
               </button>
+
               <button
                 onClick={() => router.push("/kurumsal-teklif")}
-                className="px-5 py-2.5 rounded-full text-sm font-medium border border-gray-500 text-gray-100 hover:bg-gray-800 transition flex items-center gap-2"
+                className="
+                  w-full sm:w-auto
+                  px-5 py-2.5 rounded-full text-sm font-medium
+                  border border-gray-500 text-gray-100 hover:bg-gray-800
+                  transition flex items-center justify-center gap-2
+                "
               >
                 <BsBuildingGear size={16} />
                 Kurumsal / Toplu Teklif
               </button>
             </div>
 
-            {/* Trust badges */}
+            {/* Trust badges (mobil spacing iyileştirildi) */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-4 border-t border-gray-800 mt-4">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center">
@@ -103,6 +119,7 @@ const HomePageContent = ({
                   </p>
                 </div>
               </div>
+
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center">
                   <FiShield className="text-gray-100" size={18} />
@@ -114,6 +131,7 @@ const HomePageContent = ({
                   </p>
                 </div>
               </div>
+
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center">
                   <FiPhoneCall className="text-gray-100" size={18} />
@@ -128,16 +146,27 @@ const HomePageContent = ({
             </div>
           </div>
 
-          {/* Right visual */}
+          {/* Right visual (mobil/tablet için daha dinamik yükseklik) */}
           <div className="relative">
-            <div className="relative w-full h-64 sm:h-80 lg:h-96 rounded-3xl overflow-hidden bg-gradient-to-tr from-gray-800 via-gray-900 to-gray-800 border border-gray-700 shadow-2xl">
+            <div
+              className="
+                relative w-full
+                h-72 sm:h-80 md:h-[420px] lg:h-96
+                rounded-3xl overflow-hidden
+                bg-gradient-to-tr from-gray-800 via-gray-900 to-gray-800
+                border border-gray-700 shadow-2xl
+              "
+            >
               <Image
                 src="https://images.pexels.com/photos/4489732/pexels-photo-4489732.jpeg?auto=compress&cs=tinysrgb&w=1200"
                 alt="Oto yedek parça deposu"
                 fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 600px"
                 className="object-cover opacity-70"
+                priority
               />
               <div className="absolute inset-0 bg-gradient-to-tr from-gray-900/80 via-gray-900/40 to-transparent" />
+
               <div className="absolute bottom-4 left-4 right-4 flex flex-col gap-3 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center px-3 py-1 rounded-full bg-gray-900/80 border border-gray-700 text-[11px]">
@@ -148,6 +177,7 @@ const HomePageContent = ({
                     +10.000&apos;den fazla referans
                   </span>
                 </div>
+
                 <div className="flex gap-2">
                   <div className="flex-1 rounded-xl bg-gray-900/80 border border-gray-700 p-3">
                     <p className="text-[11px] text-gray-400">Örnek arama:</p>
@@ -155,10 +185,9 @@ const HomePageContent = ({
                       7701202057 &bull; RENAULT ÖN BALATA
                     </p>
                   </div>
+
                   <div className="w-28 rounded-xl bg-black/40 border border-gray-700 p-2 flex flex-col justify-between text-[10px]">
-                    <p className="text-gray-300 font-medium">
-                      Güvenli Alışveriş
-                    </p>
+                    <p className="text-gray-300 font-medium">Güvenli Alışveriş</p>
                     <p className="text-gray-400">
                       3D Secure <br /> &amp; SSL korumalı.
                     </p>
@@ -167,14 +196,20 @@ const HomePageContent = ({
               </div>
             </div>
 
-            {/* Floating small stats card */}
-            <div className="absolute -bottom-4 left-6 right-6 sm:right-auto sm:w-64 bg-white rounded-2xl shadow-lg border border-gray-100 p-3 text-xs">
+            {/* Floating stats (mobilde akıllı konum) */}
+            <div
+              className="
+                mt-3 lg:mt-0
+                lg:absolute lg:-bottom-4 lg:left-6 lg:right-6
+                bg-white rounded-2xl shadow-lg border border-gray-100 p-3 text-xs
+              "
+            >
               <p className="font-semibold text-gray-900 mb-1">
                 Türkiye genelinde binlerce müşteri
               </p>
               <p className="text-[11px] text-gray-500">
-                Hem bireysel kullanıcılar hem servisler için sürdürülebilir
-                tedarik ortağı.
+                Hem bireysel kullanıcılar hem servisler için sürdürülebilir tedarik
+                ortağı.
               </p>
             </div>
           </div>
@@ -208,7 +243,7 @@ const HomePageContent = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
             { label: "Fren Sistemleri", code: "FREN" },
             { label: "Motor & Yağ", code: "MOTOR" },
@@ -273,14 +308,13 @@ const HomePageContent = ({
       {/* BRANDS & TRUST BLOCK */}
       <section className="bg-white border-y border-gray-100">
         <div className="max-w-[1400px] mx-auto px-4 md:px-6 py-8 md:py-10 grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-          {/* Brands row */}
           <div className="lg:col-span-2 space-y-3">
             <h3 className="text-sm font-semibold text-gray-900">
               Çalıştığımız Bazı Markalar
             </h3>
             <p className="text-[12px] text-gray-500 max-w-lg">
-              Orijinal ve kaliteli muadil markalarla çalışıyor, tedarik
-              zincirimizi sürekli güncel tutuyoruz.
+              Orijinal ve kaliteli muadil markalarla çalışıyor, tedarik zincirimizi
+              sürekli güncel tutuyoruz.
             </p>
             <div className="flex flex-wrap gap-2 mt-2">
               {["MGA", "EDGE", "ZEGEN", "RENAULT", "FİAT", "PEUGEOT"].map(
@@ -296,16 +330,15 @@ const HomePageContent = ({
             </div>
           </div>
 
-          {/* Corporate / trust card */}
           <div className="bg-gray-900 text-white rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <BsBuildingGear size={18} />
               Servisler & Filolar için Çözümler
             </h3>
             <p className="text-[12px] text-gray-300">
-              Düzenli alım yapan servisler, filo şirketleri ve kurumsal
-              müşteriler için özel fiyatlandırma, tahsisli temsilci ve stok
-              planlama hizmeti sunuyoruz.
+              Düzenli alım yapan servisler, filo şirketleri ve kurumsal müşteriler
+              için özel fiyatlandırma, tahsisli temsilci ve stok planlama hizmeti
+              sunuyoruz.
             </p>
             <button
               onClick={() => router.push("/kurumsal-teklif")}
@@ -326,10 +359,11 @@ const HomePageContent = ({
             </h4>
             <p className="text-gray-500">
               Ürün detay sayfalarımızda OEM kodu, barkod ve araç marka/model
-              bilgisini şeffaf şekilde paylaşıyoruz. Giriş yaptığınızda daha
-              detaylı teknik bilgilere erişebilirsiniz.
+              bilgisini şeffaf şekilde paylaşıyoruz. Giriş yaptığınızda daha detaylı
+              teknik bilgilere erişebilirsiniz.
             </p>
           </div>
+
           <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
             <h4 className="font-semibold text-gray-900 mb-1">
               Güvenli Ödeme ve İade
@@ -339,14 +373,15 @@ const HomePageContent = ({
               yapılmamış ürünlerde 14 gün iade hakkı.
             </p>
           </div>
+
           <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
             <h4 className="font-semibold text-gray-900 mb-1">
               Teknik Destek & Danışmanlık
             </h4>
             <p className="text-gray-500">
-              Parçanın aracınızla uyumu hakkında emin değilseniz, sipariş
-              sonrası uzman ekibimizle WhatsApp veya telefon üzerinden
-              görüşerek destek alabilirsiniz.
+              Parçanın aracınızla uyumu hakkında emin değilseniz, sipariş sonrası
+              uzman ekibimizle WhatsApp veya telefon üzerinden görüşerek destek
+              alabilirsiniz.
             </p>
           </div>
         </div>

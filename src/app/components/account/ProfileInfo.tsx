@@ -6,14 +6,12 @@ import {
   useGetUserProfileQuery,
   useUpdateUserMutation,
   useChangePasswordMutation,
-  ApiUser,
   UpdateUserPayload,
 } from "@/redux/api/userApi";
 import { FiUser, FiMail, FiPhone, FiLock } from "react-icons/fi";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import PasswordRules from "./PasswordRules";
 
-// Backend'deki passwordRegex ile aynı olmalı
 const passwordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
@@ -26,29 +24,26 @@ const ProfileInfo: React.FC = () => {
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState(""); // 5XXXXXXXXX formatı
+  const [phone, setPhone] = useState("");
 
   const [phoneError, setPhoneError] = useState(false);
 
-  // Şifre alanları
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [newPasswordAgain, setNewPasswordAgain] = useState("");
 
-  // Profil verisi geldiğinde inputları doldur
   useEffect(() => {
     if (!profileData) return;
 
-    setName(profileData.first_name ?? "");
-    setSurname(profileData.last_name ?? "");
+    setName(profileData.firstName ?? "");
+    setSurname(profileData.lastName ?? "");
     setEmail(profileData.email ?? "");
 
-    const rawPhone = profileData.phone ?? "";
-    const normalized = rawPhone.replace(/^0/, ""); // 0536.. -> 536..
+    const rawPhone = profileData.phoneNumber ?? "";
+    const normalized = String(rawPhone).replace(/^0/, "");
     setPhone(normalized);
   }, [profileData]);
 
-  // Telefon validasyonu: 5XXXXXXXXX (10 hane)
   const validatePhone = (value: string) => {
     const cleaned = value.replace(/\D/g, "");
     const regex = /^[5][0-9]{9}$/;
@@ -57,7 +52,6 @@ const ProfileInfo: React.FC = () => {
     setPhoneError(cleaned.length > 0 && !regex.test(cleaned));
   };
 
-  // PROFİL GÜNCELLE
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     toast.dismiss();
@@ -69,9 +63,7 @@ const ProfileInfo: React.FC = () => {
 
     try {
       const phoneToSend =
-        phone && phone.startsWith("5") && phone.length === 10
-          ? "0" + phone
-          : phone;
+        phone && phone.startsWith("5") && phone.length === 10 ? "0" + phone : phone;
 
       const payload: UpdateUserPayload = {
         firstName: name || undefined,
@@ -85,18 +77,14 @@ const ProfileInfo: React.FC = () => {
     } catch (err) {
       console.error("❌ Profil güncelleme hatası (raw):", err);
       const fbErr = err as FetchBaseQueryError;
-      console.error("❌ Profil güncelleme detay:", JSON.stringify(fbErr));
 
       const data: any = fbErr?.data || {};
       const apiMessage =
-        data.message ||
-        data.error ||
-        "Profil güncellenirken bir hata oluştu.";
+        data.message || data.error || "Profil güncellenirken bir hata oluştu.";
       toast.error(apiMessage);
     }
   };
 
-  // ŞİFRE DEĞİŞTİR
   const handlePasswordChange = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     toast.dismiss();
@@ -124,10 +112,7 @@ const ProfileInfo: React.FC = () => {
     }
 
     try {
-      await changePassword({
-        oldPassword,
-        newPassword,
-      }).unwrap();
+      await changePassword({ oldPassword, newPassword }).unwrap();
 
       toast.success("Şifreniz başarıyla değiştirildi.");
       setOldPassword("");
@@ -136,7 +121,6 @@ const ProfileInfo: React.FC = () => {
     } catch (err) {
       console.error("❌ Şifre değiştirme hatası (raw):", err);
       const fbErr = err as FetchBaseQueryError;
-      console.error("❌ Şifre değiştirme detay:", JSON.stringify(fbErr));
 
       const data: any = fbErr?.data || {};
       const apiMessage =
@@ -148,29 +132,27 @@ const ProfileInfo: React.FC = () => {
     }
   };
 
-  // LOADING
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="p-4 bg-white rounded-xl border shadow-sm text-xs">
         Profil bilgileri yükleniyor...
       </div>
     );
+  }
 
-  // ERROR
-  if (isError || !profileData)
+  if (isError || !profileData) {
     return (
       <div className="p-4 bg-white rounded-xl border shadow-sm text-red-500 text-xs">
         Profil bilgileri alınamadı.
       </div>
     );
+  }
 
   const initials = (name?.[0] ?? "") + (surname?.[0] ?? "");
 
   return (
     <div className="space-y-6">
-      {/* PROFİL KARTI */}
       <div className="p-6 bg-white rounded-xl border shadow-sm space-y-6">
-        {/* Header */}
         <div className="flex items-center gap-3 pb-4 border-b">
           <div className="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center font-semibold">
             {initials || <FiUser size={20} />}
@@ -183,9 +165,7 @@ const ProfileInfo: React.FC = () => {
           </div>
         </div>
 
-        {/* FORM */}
         <form onSubmit={handleSubmit} className="space-y-5 text-sm">
-          {/* AD & SOYAD */}
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="block text-xs font-medium">Ad</label>
@@ -214,7 +194,6 @@ const ProfileInfo: React.FC = () => {
             </div>
           </div>
 
-          {/* EMAIL & TELEFON */}
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="block text-xs font-medium">E-posta</label>
@@ -267,7 +246,6 @@ const ProfileInfo: React.FC = () => {
         </form>
       </div>
 
-      {/* ŞİFRE KARTI */}
       <div className="p-6 bg-white rounded-xl border shadow-sm space-y-4">
         <div className="flex items-center gap-3 border-b pb-4">
           <div className="w-9 h-9 rounded-full bg-gray-900 text-white flex items-center justify-center">
@@ -293,7 +271,6 @@ const ProfileInfo: React.FC = () => {
             />
           </div>
 
-          {/* Yeni şifreler yan yana */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="block font-medium">Yeni Şifre</label>
@@ -318,11 +295,7 @@ const ProfileInfo: React.FC = () => {
             </div>
           </div>
 
-          {/* Kurallar + eşleşme + örnek şifre */}
-          <PasswordRules
-            password={newPassword}
-            confirmPassword={newPasswordAgain}
-          />
+          <PasswordRules password={newPassword} confirmPassword={newPasswordAgain} />
 
           <div className="flex justify-end">
             <button
@@ -330,9 +303,7 @@ const ProfileInfo: React.FC = () => {
               disabled={isChangingPassword}
               className="px-4 py-2 bg-gray-900 text-white rounded-md disabled:opacity-50"
             >
-              {isChangingPassword
-                ? "Şifre Değiştiriliyor..."
-                : "Şifreyi Güncelle"}
+              {isChangingPassword ? "Şifre Değiştiriliyor..." : "Şifreyi Güncelle"}
             </button>
           </div>
         </form>

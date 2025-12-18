@@ -1,46 +1,29 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import ProductCard, {
-  Product as CardProduct,
-} from "../../components/ProductCard";
-import type { ProductBase } from "./useSearchLogic";
+import ProductCard, { Product as CardProduct } from "../../components/ProductCard";
+import type { ProductBase, SearchLogic } from "./useSearchLogic";
 
-interface SearchLogicLike {
-  paginated: ProductBase[];
-  total: number;
-  totalPages: number;
-  currentPage: number;
-  setCurrentPage: (page: number) => void;
-}
-
-interface SearchResultsProps {
-  logic: SearchLogicLike;
-}
-
-const PAGE_SIZE = 12; // useSearchLogic ile aynı olmalı
-
-const mapToCardProduct = (p: ProductBase): CardProduct => ({
-  BRANDCODE: p.BRANDCODE,
-  name: p.NAME,
-  STOCK_QUANTITY: p.STOCK_QUANTITY,
-  price: p.price,
-  image: p.image,
-  BRAND: p.BRAND,
-  CAR_BRAND: p.CAR_BRAND,
-});
-
-const SearchResults = ({ logic }: SearchResultsProps) => {
+export default function SearchResults({ logic }: { logic: SearchLogic }) {
   const router = useRouter();
-  const { paginated, total, totalPages, currentPage, setCurrentPage } = logic;
+
+  const { paginated, total, totalPages, currentPage, setCurrentPage, PAGE_SIZE } =
+    logic;
+
+  const mapToCardProduct = (p: ProductBase): CardProduct => ({
+    BRANDCODE: p.BRANDCODE,
+    name: p.NAME,
+    STOCK_QUANTITY: p.STOCK_QUANTITY,
+    price: p.price,
+    image: p.image,
+    BRAND: p.BRAND,
+    CAR_BRAND: p.CAR_BRAND,
+  });
 
   const handleChangePage = (page: number) => {
     if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
-
-    if (typeof window !== "undefined") {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const renderPageButtons = () => {
@@ -49,14 +32,9 @@ const SearchResults = ({ logic }: SearchResultsProps) => {
 
     let start = Math.max(1, currentPage - 2);
     let end = Math.min(totalPages, start + maxButtons - 1);
+    if (end - start + 1 < maxButtons) start = Math.max(1, end - maxButtons + 1);
 
-    if (end - start + 1 < maxButtons) {
-      start = Math.max(1, end - maxButtons + 1);
-    }
-
-    for (let i = start; i <= end; i++) {
-      buttons.push(i);
-    }
+    for (let i = start; i <= end; i++) buttons.push(i);
 
     return (
       <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
@@ -96,14 +74,12 @@ const SearchResults = ({ logic }: SearchResultsProps) => {
     );
   };
 
-  const startIndex =
-    total === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
-  const endIndex =
-    total === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, total);
+  const startIndex = total === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const endIndex = total === 0 ? 0 : Math.min(currentPage * PAGE_SIZE, total);
 
   if (total === 0) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-200 p-6 text-sm text-gray-600 text-center">
+      <div className="border border-dashed border-gray-200 rounded-xl p-6 text-sm text-gray-600 text-center">
         Aramanıza uygun ürün bulunamadı.
         <div className="mt-2 text-xs text-gray-500 space-y-1">
           <p>• OEM kodunu eksiksiz yazmayı deneyin</p>
@@ -115,46 +91,26 @@ const SearchResults = ({ logic }: SearchResultsProps) => {
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 lg:p-5 shadow-sm">
-      {/* Üst bilgi satırı */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-        <div className="space-y-1">
-          <p className="text-xs text-gray-500">
-            {total} ürün listeleniyor
-          </p>
-          <p className="text-[11px] text-gray-400">
-            Sayfa {currentPage} / {totalPages}
-          </p>
-        </div>
-
-        <p className="text-[11px] text-gray-500">
-          {startIndex}–{endIndex} / {total} ürün gösteriliyor
-        </p>
-      </div>
-
-      {/* Ürün grid'i */}
+    <>
+      {/* Grid */}
       <div className="grid gap-4 sm:gap-5 lg:gap-6 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         {paginated.map((p) => (
           <div key={p.BRANDCODE} className="flex justify-center">
             <ProductCard
               product={mapToCardProduct(p)}
-              onImageClick={(id) =>
-                router.push(`/products/${encodeURIComponent(id)}`)
-              }
+              onImageClick={(id) => router.push(`/products/${encodeURIComponent(id)}`)}
             />
           </div>
         ))}
       </div>
 
-      {/* Sayfalama barı */}
+      {/* Footer */}
       <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <p className="text-[11px] text-gray-500">
           {startIndex}–{endIndex} / {total} ürün gösteriliyor
         </p>
         {renderPageButtons()}
       </div>
-    </div>
+    </>
   );
-};
-
-export default SearchResults;
+}
