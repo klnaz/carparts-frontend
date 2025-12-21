@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "@/redux/slices/authSlice";
-import { RootState } from "@/redux/store";
+import type { RootState } from "@/redux/store";
 import { CgSearch } from "react-icons/cg";
 import { HiOutlineShoppingBag, HiShoppingBag } from "react-icons/hi";
 import { AiOutlineHeart, AiFillHeart } from "react-icons/ai";
@@ -17,7 +17,14 @@ const Navbar = () => {
   const dispatch = useDispatch();
   const router = useRouter();
 
+  // Hydration fix: server ve client ilk render aynı olsun
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { token } = useSelector((state: RootState) => state.auth);
+
   const cartCount = useSelector(
     (state: RootState) => state.cart?.items?.length ?? 0
   );
@@ -27,9 +34,9 @@ const Navbar = () => {
     skip: !token,
   });
 
-  const fullName =
-    (profileData?.first_name || "").trim() +
-    (profileData?.last_name ? ` ${profileData.last_name}` : "");
+  const fullName = profileData
+    ? `${profileData.firstName ?? ""} ${profileData.firstName?? ""}`.trim()
+    : "";
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -63,9 +70,7 @@ const Navbar = () => {
     setMobileMenuOpen(false);
   };
 
-  const handleSearchKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       handleSearchSubmit();
@@ -76,10 +81,7 @@ const Navbar = () => {
     <div className="w-full bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-[1400px] mx-auto flex items-center justify-between py-4 px-4 md:px-6">
         {/* Logo */}
-        <Link
-          href="/"
-          className="text-3xl font-bold tracking-wider text-black"
-        >
+        <Link href="/" className="text-3xl font-bold tracking-wider text-black">
           Ko<span className="text-red-600">parts</span>
         </Link>
 
@@ -122,18 +124,25 @@ const Navbar = () => {
                 />
               </span>
 
-              {/* Metin bloğu: Hesabım + altına isim / text */}
+              {/* Metin bloğu */}
               <span className="flex flex-col items-start leading-tight">
                 <span className="text-sm">Hesabım</span>
-                {token && fullName.trim() !== "" && (
-                  <span className="text-[11px] text-gray-500">
-                    {fullName}
-                  </span>
-                )}
-                {!token && (
-                  <span className="text-[11px] text-gray-500">
-                    Giriş yap / Kayıt ol
-                  </span>
+
+                {/* Hydration safe: sadece mounted olduktan sonra koşullu render */}
+                {mounted && (
+                  <>
+                    {token ? (
+                      fullName ? (
+                        <span className="text-[11px] text-gray-500">
+                          {fullName}
+                        </span>
+                      ) : null
+                    ) : (
+                      <span className="text-[11px] text-gray-500">
+                        Giriş yap / Kayıt ol
+                      </span>
+                    )}
+                  </>
                 )}
               </span>
             </button>
@@ -186,10 +195,7 @@ const Navbar = () => {
               size={22}
               className="text-red-600 group-hover:hidden"
             />
-            <AiFillHeart
-              size={22}
-              className="text-red-600 hidden group-hover:block"
-            />
+            <AiFillHeart size={22} className="text-red-600 hidden group-hover:block" />
             Favoriler
           </Link>
 
@@ -202,10 +208,7 @@ const Navbar = () => {
               size={22}
               className="text-red-600 group-hover:hidden"
             />
-            <HiShoppingBag
-              size={22}
-              className="text-red-600 hidden group-hover:block"
-            />
+            <HiShoppingBag size={22} className="text-red-600 hidden group-hover:block" />
             <span>Sepetim</span>
 
             {cartCount > 0 && (
@@ -258,13 +261,18 @@ const Navbar = () => {
               />
             </div>
 
-            <Link href="/favorilerim" className="py-2 border-b">
+            <Link
+              href="/favorilerim"
+              className="py-2 border-b"
+              onClick={() => setMobileMenuOpen(false)}
+            >
               Favorilerim
             </Link>
 
             <Link
               href="/sepetim"
               className="py-2 border-b flex items-center justify-between"
+              onClick={() => setMobileMenuOpen(false)}
             >
               <span>Sepetim</span>
               {cartCount > 0 && (
@@ -276,10 +284,18 @@ const Navbar = () => {
 
             {token ? (
               <>
-                <Link href="/hesabim" className="py-2 border-b">
+                <Link
+                  href="/hesabim"
+                  className="py-2 border-b"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   Hesabım
                 </Link>
-                <Link href="/siparislerim" className="py-2 border-b">
+                <Link
+                  href="/siparislerim"
+                  className="py-2 border-b"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   Siparişlerim
                 </Link>
                 <button
@@ -294,7 +310,11 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              <Link href="/signin" className="py-2 border-b">
+              <Link
+                href="/signin"
+                className="py-2 border-b"
+                onClick={() => setMobileMenuOpen(false)}
+              >
                 Giriş Yap
               </Link>
             )}

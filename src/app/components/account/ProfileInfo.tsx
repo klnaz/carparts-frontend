@@ -35,11 +35,11 @@ const ProfileInfo: React.FC = () => {
   useEffect(() => {
     if (!profileData) return;
 
-    setName(profileData.firstName ?? "");
-    setSurname(profileData.lastName ?? "");
-    setEmail(profileData.email ?? "");
+ setName(profileData.firstName ?? "");
+setSurname(profileData.lastName ?? "");
+setEmail(profileData.email ?? "");
 
-    const rawPhone = profileData.phoneNumber ?? "";
+const rawPhone = profileData.phoneNumber ?? "";
     const normalized = String(rawPhone).replace(/^0/, "");
     setPhone(normalized);
   }, [profileData]);

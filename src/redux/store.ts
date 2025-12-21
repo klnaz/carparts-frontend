@@ -1,23 +1,25 @@
-import { configureStore } from '@reduxjs/toolkit';
-import { authApi } from './api/authApi';
-import { userApi } from './api/userApi';
-import { addressApi } from './api/addressApi';
-import { paymentApi } from './api/paymentApi';
-import authReducer from './slices/authSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import authReducer from "./slices/authSlice";
 import cartReducer from "./slices/cartSlice";
+
+import { userApi } from "./api/userApi";
+import { authApi } from "./api/authApi";
+import { favoritesApi } from "./api/favoritesApi"; // ✅ EKLE
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
+    cart: cartReducer,
+
     [authApi.reducerPath]: authApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
-    [addressApi.reducerPath]: addressApi.reducer,
-    [paymentApi.reducerPath]: paymentApi.reducer,
-    cart: cartReducer, // ⭐ BURAYI EKLİYORSUN
-
-    auth: authReducer,
+    [favoritesApi.reducerPath]: favoritesApi.reducer, // ✅ EKLE
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(authApi.middleware, userApi.middleware, addressApi.middleware, paymentApi.middleware),
+    getDefaultMiddleware()
+      .concat(authApi.middleware)
+      .concat(userApi.middleware)
+      .concat(favoritesApi.middleware), // ✅ EKLE
 });
 
 export type RootState = ReturnType<typeof store.getState>;

@@ -22,29 +22,29 @@ type RawUserLike = {
   id?: string;
   email?: string;
 
-  // DB / bazı cevaplar snake_case dönebilir
+  // backend farklı yazabilir
+  firstName?: string;
+  lastName?: string;
   first_name?: string;
   last_name?: string;
 
-  // bazı yerlerde camelCase dönebilir
-  firstName?: string;
-  lastName?: string;
-
-  phone?: string | null;
   phoneNumber?: string | null;
   phone_number?: string | null;
+  phone?: string | null;
 
   role?: string;
 };
 
 function pickUser(response: any): RawUserLike {
+  // /auth/profile -> { user: {...} }
+  // bazı yerlerde { data: {...} } ya da direkt {...}
   return (response?.user ?? response?.data ?? response) as RawUserLike;
 }
 
 export const userApi = createApi({
   reducerPath: "userApi",
   baseQuery: fetchBaseQuery({
-    baseUrl: `${process.env.NEXT_PUBLIC_API_URL}/users`,
+    baseUrl: process.env.NEXT_PUBLIC_API_URL,
     prepareHeaders: (headers, { getState }) => {
       const token = (getState() as RootState).auth.token;
       if (token) headers.set("authorization", `Bearer ${token}`);
@@ -53,16 +53,9 @@ export const userApi = createApi({
   }),
   tagTypes: ["User"],
   endpoints: (builder) => ({
-    /**
-     * ✅ PROFİL GETİR
-     * Backend route: GET /auth/profile
-     * Not: baseUrl /users olduğu için full URL kullanıyoruz.
-     */
+    // ✅ PROFİL GETİR: /auth/profile
     getUserProfile: builder.query<ApiUser, void>({
-      query: () => ({
-        url: `${process.env.NEXT_PUBLIC_API_URL}/auth/profile`,
-        method: "GET",
-      }),
+      query: () => "/auth/profile",
       transformResponse: (response: any): ApiUser => {
         const raw = pickUser(response);
 
@@ -84,29 +77,23 @@ export const userApi = createApi({
       providesTags: ["User"],
     }),
 
-    /**
-     * PROFİL GÜNCELLE
-     * Backend: PUT /users/
-     */
+    // PROFİL GÜNCELLE: /users
     updateUser: builder.mutation<ApiUser, UpdateUserPayload>({
       query: (body) => ({
-        url: "/",
+        url: "/users",
         method: "PUT",
         body,
       }),
       invalidatesTags: ["User"],
     }),
 
-    /**
-     * ŞİFRE DEĞİŞTİR
-     * Backend: PUT /users/password
-     */
+    // ŞİFRE DEĞİŞTİR: /users/password
     changePassword: builder.mutation<
       void,
       { oldPassword: string; newPassword: string }
     >({
       query: ({ oldPassword, newPassword }) => ({
-        url: "/password",
+        url: "/users/password",
         method: "PUT",
         body: {
           currentPassword: oldPassword,
@@ -115,13 +102,10 @@ export const userApi = createApi({
       }),
     }),
 
-    /**
-     * HESAP SİL
-     * Backend: DELETE /users/
-     */
+    // HESAP SİL: /users
     deleteUser: builder.mutation<void, void>({
       query: () => ({
-        url: "/",
+        url: "/users",
         method: "DELETE",
       }),
     }),

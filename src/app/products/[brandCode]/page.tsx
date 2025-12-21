@@ -1,6 +1,7 @@
+// C:\Users\erhan\OneDrive\Masaüstü\carparts\frontend\src\app\products\[brandCode]\page.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,10 +22,21 @@ import bestSellersDataRaw from "../../../data/bestSellers.json";
 
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "@/redux/slices/cartSlice";
-import { RootState } from "@/redux/store";
+import type { RootState } from "@/redux/store";
 import { addRecentlyViewed } from "@/utils/recentlyViewed";
 
+/**
+ * ✅ ÇÖZÜM A: Favoriye eklerken DB UUID göndereceğiz
+ * - bestSellers.json içindeki her ürünün id alanı (UUID) olmalı
+ * - product.BRANDCODE değil -> product.id kullanacağız
+ *
+ * ✅ Misafir favoriler:
+ * - cookie'de guest_favorites (JSON array of UUIDs) tutuyoruz
+ * - kullanıcı login olunca cookie'deki UUID'leri API'ye basıp cookie'yi temizliyoruz
+ */
+
 interface ProductDetail {
+  id: string; // ✅ DB UUID (favorites için gerekli)
   BRANDCODE: string;
   NAME: string;
   STOCK_QUANTITY?: number;
@@ -72,6 +84,119 @@ const qas: QAItem[] = [
   },
 ];
 
+// -------------------- Cookie helpers (guest favorites) --------------------
+const GUEST_FAV_COOKIE = "guest_favorites";
+const COOKIE_DAYS = 30;
+
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`));
+  if (!match) return null;
+  return decodeURIComponent(match.split("=").slice(1).join("="));
+}
+
+function setCookie(name: string, value: string, days = COOKIE_DAYS) {
+  if (typeof document === "undefined") return;
+  const expires = new Date(Date.now() + days * 86400000).toUTCString();
+  document.cookie = `${name}=${encodeURIComponent(
+    value
+  )}; expires=${expires}; path=/; SameSite=Lax`;
+}
+
+function deleteCookie(name: string) {
+  if (typeof document === "undefined") return;
+  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+}
+
+function readGuestFavorites(): string[] {
+  try {
+    const raw = getCookie(GUEST_FAV_COOKIE);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((x) => typeof x === "string");
+  } catch {
+    return [];
+  }
+}
+
+function writeGuestFavorites(ids: string[]) {
+  setCookie(GUEST_FAV_COOKIE, JSON.stringify(ids));
+}
+
+// -------------------- API helpers (auth favorites) --------------------
+type FavoriteApiItem = {
+  id: string; // favorite row id (UUID)
+  userId: string;
+  productId: string;
+  Product?: {
+    id: string;
+    stockName1?: string;
+    salesPrice1?: number;
+    brand?: string;
+    model?: string;
+  };
+};
+
+async function apiGetFavorites(token: string): Promise<FavoriteApiItem[]> {
+  const base = process.env.NEXT_PUBLIC_API_URL;
+  const res = await fetch(`${base}/favorites`, {
+    method: "GET",
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  if (!res.ok) {
+    const t = await res.text().catch(() => "");
+    throw new Error(t || "Favoriler alınamadı.");
+  }
+
+  const json = await res.json();
+  return (json?.data ?? []) as FavoriteApiItem[];
+}
+
+async function apiAddFavorite(token: string, productId: string): Promise<void> {
+  const base = process.env.NEXT_PUBLIC_API_URL;
+  const res = await fetch(`${base}/favorites`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ productId }),
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => null);
+    const msg = json?.message || "Favoriye eklenemedi.";
+    throw new Error(msg);
+  }
+}
+
+async function apiRemoveFavorite(token: string, productId: string): Promise<void> {
+  const base = process.env.NEXT_PUBLIC_API_URL;
+
+  // ⚠️ Backend route: DELETE /favorites/:id
+  // Controller "id" paramını service'e productId olarak geçiriyor.
+  // Bu yüzden burada :id = productId göndermek doğru.
+  const res = await fetch(`${base}/favorites/${productId}`, {
+    method: "DELETE",
+    headers: {
+      authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    const json = await res.json().catch(() => null);
+    const msg = json?.message || "Favoriden çıkarılamadı.";
+    throw new Error(msg);
+  }
+}
+
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -79,22 +204,32 @@ export default function ProductDetailPage() {
 
   const dispatch = useDispatch();
 
-  // 🔐 Login durumu (OEM gösterimi için)
   const token = useSelector((state: RootState) => state.auth.token);
   const isLoggedIn = Boolean(token);
 
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
   const [quantity, setQuantity] = useState(1);
   const [currentImage, setCurrentImage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [openQuestionIndex, setOpenQuestionIndex] = useState<number | null>(
-    null
+  const [openQuestionIndex, setOpenQuestionIndex] = useState<number | null>(null);
+
+  // Favori state
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [favBusy, setFavBusy] = useState(false);
+  const [heartBump, setHeartBump] = useState(false);
+  const bumpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const cartCount = useSelector(
+    (state: RootState) => state.cart?.items?.length ?? 0
   );
 
-  const bestSellersData: ProductDetail[] = (bestSellersDataRaw as any[]).map(
-    (item) => ({
+  const bestSellersData: ProductDetail[] = useMemo(() => {
+    return (bestSellersDataRaw as any[]).map((item) => ({
+      // ✅ DB UUID: JSON'da id olmalı
+      id: item.id || "",
       BRANDCODE: item.BRANDCODE,
       NAME: item.NAME,
       STOCK_QUANTITY: item.STOCK_QUANTITY,
@@ -117,8 +252,8 @@ export default function ProductDetailPage() {
       images: item.images || [],
       modeli: item.modeli || "",
       altGrubu: item.altGrubu || "",
-    })
-  );
+    }));
+  }, []);
 
   useEffect(() => {
     if (!brandCode) return;
@@ -135,7 +270,6 @@ export default function ProductDetailPage() {
     setProduct(found);
     setLoading(false);
 
-    // 🔁 Son görüntülenenler (localStorage)
     addRecentlyViewed({
       id: found.BRANDCODE,
       name: found.NAME,
@@ -144,7 +278,83 @@ export default function ProductDetailPage() {
       BRAND: found.BRAND,
       CAR_BRAND: found.CAR_BRAND,
     });
-  }, [brandCode]);
+  }, [brandCode, bestSellersData]);
+
+  // ✅ İlk favori durumunu belirle (guest veya auth)
+  useEffect(() => {
+    if (!product) return;
+
+    // product.id yoksa favori sistemi çalışamaz (Çözüm A)
+    if (!product.id) {
+      setIsFavorited(false);
+      return;
+    }
+
+    if (!isLoggedIn) {
+      const guestIds = readGuestFavorites();
+      setIsFavorited(guestIds.includes(product.id));
+      return;
+    }
+
+    // logged in -> API'den favori listesi çek, productId içinde var mı bak
+    let cancelled = false;
+    (async () => {
+      try {
+        const favs = await apiGetFavorites(token as string);
+        if (cancelled) return;
+        const exists = favs.some((f) => f.productId === product.id);
+        setIsFavorited(exists);
+      } catch {
+        // sessiz geç; UI kırılmasın
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product, isLoggedIn, token]);
+
+  // ✅ Login olunca cookie favorileri DB'ye taşı (sync)
+  useEffect(() => {
+    if (!token) return;
+
+    const guestIds = readGuestFavorites();
+    if (!guestIds.length) return;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        // önce mevcut favorileri çek (duplicate önlemek için)
+        const existing = await apiGetFavorites(token);
+        const existingIds = new Set(existing.map((x) => x.productId));
+
+        for (const pid of guestIds) {
+          if (existingIds.has(pid)) continue;
+          try {
+            await apiAddFavorite(token, pid);
+          } catch {
+            // tek bir ürün fail olsa bile devam
+          }
+        }
+
+        if (!cancelled) {
+          deleteCookie(GUEST_FAV_COOKIE);
+        }
+      } catch {
+        // sync fail -> cookie kalsın
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token]);
+
+  useEffect(() => {
+    return () => {
+      if (bumpTimerRef.current) clearTimeout(bumpTimerRef.current);
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -174,28 +384,19 @@ export default function ProductDetailPage() {
   const inStock =
     typeof product.STOCK_QUANTITY === "number" && product.STOCK_QUANTITY > 0;
 
-  // 🔐 OEM formatlama: login yoksa sadece ilk 3 hane + maskeleme
   const formatOem = (oem?: string) => {
     if (!oem) return "";
-
     if (isLoggedIn) return oem;
-
     if (oem.length <= 3) return `${oem}******`;
-
     return `${oem.slice(0, 3)}******`;
   };
 
   const displayOem = formatOem(product.ozelKodu1);
   const showOemHint = !!product.ozelKodu1 && !isLoggedIn;
-  const oemHintText = showOemHint
-    ? "Tüm OEM kodunu görmek için giriş yapın."
-    : "";
+  const oemHintText = showOemHint ? "Tüm OEM kodunu görmek için giriş yapın." : "";
 
-  const handleNext = () =>
-    setCurrentImage((prev) => (prev + 1) % images.length);
-
-  const handlePrev = () =>
-    setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
+  const handleNext = () => setCurrentImage((prev) => (prev + 1) % images.length);
+  const handlePrev = () => setCurrentImage((prev) => (prev - 1 + images.length) % images.length);
 
   const handleAddToCart = () => {
     if (!inStock) return;
@@ -222,12 +423,6 @@ export default function ProductDetailPage() {
     );
   };
 
-  const handleFavorite = () => {
-    toast.info(`"${product.NAME}" favorilere eklendi`, {
-      autoClose: 2000,
-    });
-  };
-
   const handleQuantityChange = (value: string) => {
     const num = parseInt(value || "1", 10);
     if (Number.isNaN(num)) {
@@ -252,6 +447,57 @@ export default function ProductDetailPage() {
     setOpenQuestionIndex((prev) => (prev === index ? null : index));
   };
 
+  // ✅ Favori toggle (tasarım aynı, sadece logic + küçük animasyon)
+  const handleFavorite = async () => {
+    if (!product.id) {
+      toast.error("Ürün id (UUID) bulunamadı. Favori işlemi yapılamadı.");
+      return;
+    }
+    if (favBusy) return;
+
+    setFavBusy(true);
+
+    // küçük animasyon
+    setHeartBump(true);
+    if (bumpTimerRef.current) clearTimeout(bumpTimerRef.current);
+    bumpTimerRef.current = setTimeout(() => setHeartBump(false), 220);
+
+    try {
+      if (!isLoggedIn) {
+        const guestIds = readGuestFavorites();
+        const exists = guestIds.includes(product.id);
+        const next = exists
+          ? guestIds.filter((x) => x !== product.id)
+          : [product.id, ...guestIds];
+
+        writeGuestFavorites(next);
+        setIsFavorited(!exists);
+
+        toast[exists ? "info" : "success"](
+          exists ? "Favorilerden çıkarıldı" : "Favorilere eklendi",
+          { autoClose: 1600 }
+        );
+        return;
+      }
+
+      // logged in -> API
+      if (!isFavorited) {
+        await apiAddFavorite(token as string, product.id); // ✅ UUID
+        setIsFavorited(true);
+        toast.success("Favorilere eklendi", { autoClose: 1600 });
+      } else {
+        await apiRemoveFavorite(token as string, product.id); // ✅ UUID
+        setIsFavorited(false);
+        toast.info("Favorilerden çıkarıldı", { autoClose: 1600 });
+      }
+    } catch (e: any) {
+      const msg = typeof e?.message === "string" ? e.message : "Favori işlemi başarısız.";
+      toast.error(msg, { autoClose: 2200 });
+    } finally {
+      setFavBusy(false);
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 md:px-6 py-6 space-y-10">
       {/* Breadcrumb */}
@@ -269,15 +515,11 @@ export default function ProductDetailPage() {
           /{" "}
           {product.CATOGERY && (
             <>
-              <span className="capitalize text-red-600">
-                {product.CATOGERY.toLowerCase()}
-              </span>{" "}
+              <span className="capitalize text-red-600">{product.CATOGERY.toLowerCase()}</span>{" "}
               /{" "}
             </>
           )}
-          <span className="font-medium text-gray-700 line-clamp-1">
-            {product.NAME}
-          </span>
+          <span className="font-medium text-gray-700 line-clamp-1">{product.NAME}</span>
         </span>
       </div>
 
@@ -318,17 +560,10 @@ export default function ProductDetailPage() {
                   key={idx}
                   onClick={() => setCurrentImage(idx)}
                   className={`relative w-16 h-16 rounded-lg border ${
-                    currentImage === idx
-                      ? "border-red-500"
-                      : "border-gray-200"
+                    currentImage === idx ? "border-red-500" : "border-gray-200"
                   } overflow-hidden flex-shrink-0`}
                 >
-                  <Image
-                    src={img}
-                    alt={`${product.NAME}-${idx}`}
-                    fill
-                    className="object-cover"
-                  />
+                  <Image src={img} alt={`${product.NAME}-${idx}`} fill className="object-cover" />
                 </button>
               ))}
             </div>
@@ -341,14 +576,8 @@ export default function ProductDetailPage() {
             <p className="text-xs uppercase tracking-wide text-gray-500">
               {product.CAR_BRAND || product.BRAND || "Oto Yedek Parça"}
             </p>
-            <h1 className="text-2xl md:text-3xl font-semibold mt-1 mb-2">
-              {product.NAME}
-            </h1>
-            {product.secondaryNAME && (
-              <p className="text-sm text-gray-500">
-                {product.secondaryNAME}
-              </p>
-            )}
+            <h1 className="text-2xl md:text-3xl font-semibold mt-1 mb-2">{product.NAME}</h1>
+            {product.secondaryNAME && <p className="text-sm text-gray-500">{product.secondaryNAME}</p>}
           </div>
 
           {/* Rating + Stok */}
@@ -358,17 +587,14 @@ export default function ProductDetailPage() {
                 <Star key={i} size={16} fill="#fbbf24" stroke="none" />
               ))}
               <span className="ml-1 text-xs text-gray-600">4.9 / 5</span>
-              <span className="text-[11px] text-gray-400">
-                (38 değerlendirme)
-              </span>
+              <span className="text-[11px] text-gray-400">(38 değerlendirme)</span>
             </div>
             <div className="h-4 w-[1px] bg-gray-200" />
             <div className="text-xs">
               {inStock ? (
                 <span className="text-emerald-600 font-medium">
                   Stokta var{" "}
-                  {typeof product.STOCK_QUANTITY === "number" &&
-                    `(${product.STOCK_QUANTITY} adet)`}
+                  {typeof product.STOCK_QUANTITY === "number" && `(${product.STOCK_QUANTITY} adet)`}
                 </span>
               ) : (
                 <span className="text-red-600 font-medium">Stokta yok</span>
@@ -381,9 +607,7 @@ export default function ProductDetailPage() {
             <p className="text-2xl md:text-3xl font-semibold text-black">
               {product.price.toLocaleString("tr-TR")} ₺
             </p>
-            <p className="text-xs text-gray-500">
-              KDV dahil • Güvenli ödeme
-            </p>
+            <p className="text-xs text-gray-500">KDV dahil • Güvenli ödeme</p>
           </div>
 
           {/* Kısa teknik bilgi bloğu */}
@@ -393,9 +617,7 @@ export default function ProductDetailPage() {
                 <span className="font-medium">OEM Kodu: </span>
                 <span className="font-mono">{displayOem}</span>
                 {showOemHint && (
-                  <span className="ml-2 text-[11px] text-gray-500">
-                    (Tümünü görmek için giriş yapın)
-                  </span>
+                  <span className="ml-2 text-[11px] text-gray-500">(Tümünü görmek için giriş yapın)</span>
                 )}
               </p>
             )}
@@ -444,9 +666,7 @@ export default function ProductDetailPage() {
                   type="button"
                   onClick={() =>
                     setQuantity((q) =>
-                      product.STOCK_QUANTITY
-                        ? Math.min(q + 1, product.STOCK_QUANTITY)
-                        : q + 1
+                      product.STOCK_QUANTITY ? Math.min(q + 1, product.STOCK_QUANTITY) : q + 1
                     )
                   }
                   className="px-3 py-2 text-lg text-gray-600 hover:bg-gray-100"
@@ -469,22 +689,35 @@ export default function ProductDetailPage() {
                 {inStock ? "Sepete Ekle" : "Stokta Yok"}
               </button>
 
-              {/* Favori butonu */}
+              {/* Favori butonu (tasarım aynı) */}
               <button
                 onClick={handleFavorite}
-                className="flex gap-2 items-center border px-4 py-2 rounded-lg hover:bg-gray-50 transition text-sm"
+                disabled={favBusy}
+                className="flex gap-2 items-center border px-4 py-2 rounded-lg hover:bg-gray-50 transition text-sm disabled:opacity-60"
               >
-                <Heart size={18} className="text-red-600" />
-                Favorilere Ekle
+                <Heart
+                  size={18}
+                  className={`text-red-600 transition-transform ${
+                    heartBump ? "scale-125" : "scale-100"
+                  }`}
+                  // sadece ikon dolu-görünümü için stroke/fill oynamıyoruz; tasarım bozulmasın diye sınıf kullanıyoruz
+                />
+                {isFavorited ? "Favorilerden Çıkar" : "Favorilere Ekle"}
               </button>
             </div>
 
             <p className="text-[11px] text-gray-500 flex items-center gap-1">
               <Info size={14} className="text-gray-400" />
-              Saat 16:00&apos;ya kadar verilen siparişler aynı gün kargoya
-              verilir. Yanlış parça durumunda iade/değişim hakkınız vardır.
+              Saat 16:00&apos;ya kadar verilen siparişler aynı gün kargoya verilir. Yanlış parça
+              durumunda iade/değişim hakkınız vardır.
             </p>
           </div>
+
+          {/* (Bu satır sadece senin debug için istersen kaldır) */}
+          <p className="text-[10px] text-gray-400">
+            {/* Favori için gerekli UUID: */}
+            {/* product.id: {product.id || "(YOK)"} */}
+          </p>
         </div>
       </div>
 
@@ -502,15 +735,11 @@ export default function ProductDetailPage() {
               {product.ozelKodu1 && (
                 <div className="flex justify-between border-b py-1">
                   <span className="text-gray-500">OEM Kodu</span>
-                  <span className="font-medium font-mono">
-                    {displayOem}
-                  </span>
+                  <span className="font-medium font-mono">{displayOem}</span>
                 </div>
               )}
               {showOemHint && (
-                <div className="md:col-span-2 text-[11px] text-gray-500 pt-1">
-                  {oemHintText}
-                </div>
+                <div className="md:col-span-2 text-[11px] text-gray-500 pt-1">{oemHintText}</div>
               )}
               {product.barkodu && (
                 <div className="flex justify-between border-b py-1">
@@ -542,9 +771,7 @@ export default function ProductDetailPage() {
               {product.secondaryNAME && (
                 <div className="flex justify-between border-b py-1">
                   <span className="text-gray-500">Güncelleme / Not</span>
-                  <span className="font-medium">
-                    {product.secondaryNAME}
-                  </span>
+                  <span className="font-medium">{product.secondaryNAME}</span>
                 </div>
               )}
             </div>
@@ -554,15 +781,12 @@ export default function ProductDetailPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm">
             <h2 className="text-lg font-semibold mb-3">Ürün Açıklaması</h2>
             {product.aciklama2 ? (
-              <p className="text-sm text-gray-700 whitespace-pre-line">
-                {product.aciklama2}
-              </p>
+              <p className="text-sm text-gray-700 whitespace-pre-line">{product.aciklama2}</p>
             ) : (
               <p className="text-sm text-gray-500">
-                Bu ürün, {product.CAR_BRAND || "çeşitli araçlarla"} uyumlu,
-                kalite standartlarına uygun bir yedek parçadır. OEM kodunu ve
-                araç marka/model bilgilerinizi kontrol ederek uyumluluğu teyit
-                etmenizi öneririz.
+                Bu ürün, {product.CAR_BRAND || "çeşitli araçlarla"} uyumlu, kalite standartlarına
+                uygun bir yedek parçadır. OEM kodunu ve araç marka/model bilgilerinizi kontrol ederek
+                uyumluluğu teyit etmenizi öneririz.
               </p>
             )}
           </div>
@@ -578,35 +802,24 @@ export default function ProductDetailPage() {
               {qas.map((item, index) => {
                 const isOpen = openQuestionIndex === index;
                 return (
-                  <div
-                    key={index}
-                    className="border border-gray-200 rounded-lg overflow-hidden"
-                  >
+                  <div key={index} className="border border-gray-200 rounded-lg overflow-hidden">
                     <button
                       type="button"
                       onClick={() => toggleQuestion(index)}
                       className="w-full flex justify-between items-center px-3 py-2 text-left text-sm hover:bg-gray-50"
                     >
-                      <span className="font-medium text-gray-800">
-                        {item.question}
-                      </span>
-                      <span className="text-gray-400 text-xs">
-                        {isOpen ? "-" : "+"}
-                      </span>
+                      <span className="font-medium text-gray-800">{item.question}</span>
+                      <span className="text-gray-400 text-xs">{isOpen ? "-" : "+"}</span>
                     </button>
-                    {isOpen && (
-                      <div className="px-3 pb-3 text-xs text-gray-600">
-                        {item.answer}
-                      </div>
-                    )}
+                    {isOpen && <div className="px-3 pb-3 text-xs text-gray-600">{item.answer}</div>}
                   </div>
                 );
               })}
             </div>
 
             <p className="mt-3 text-[11px] text-gray-500">
-              Sorunuz mu var? Siparişten sonra teknik ekibimizle WhatsApp
-              üzerinden birebir iletişime geçebilirsiniz.
+              Sorunuz mu var? Siparişten sonra teknik ekibimizle WhatsApp üzerinden birebir iletişime
+              geçebilirsiniz.
             </p>
           </div>
 
@@ -619,16 +832,9 @@ export default function ProductDetailPage() {
                   <span className="font-medium">Ali K.</span>
                   <div className="flex items-center gap-1 text-yellow-500 text-xs">
                     {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        fill="#fbbf24"
-                        stroke="none"
-                      />
+                      <Star key={i} size={14} fill="#fbbf24" stroke="none" />
                     ))}
-                    <span className="ml-1 text-gray-600 text-xs">
-                      5 / 5
-                    </span>
+                    <span className="ml-1 text-gray-600 text-xs">5 / 5</span>
                   </div>
                 </div>
                 <p className="mt-1 text-gray-700">
@@ -641,17 +847,10 @@ export default function ProductDetailPage() {
                   <span className="font-medium">Mehmet T.</span>
                   <div className="flex items-center gap-1 text-yellow-500 text-xs">
                     {[...Array(4)].map((_, i) => (
-                      <Star
-                        key={i}
-                        size={14}
-                        fill="#fbbf24"
-                        stroke="none"
-                      />
+                      <Star key={i} size={14} fill="#fbbf24" stroke="none" />
                     ))}
                     <Star size={14} className="text-gray-300" />
-                    <span className="ml-1 text-gray-600 text-xs">
-                      4 / 5
-                    </span>
+                    <span className="ml-1 text-gray-600 text-xs">4 / 5</span>
                   </div>
                 </div>
                 <p className="mt-1 text-gray-700">
@@ -660,8 +859,7 @@ export default function ProductDetailPage() {
               </div>
 
               <p className="text-[11px] text-gray-500">
-                Yorumlar temsilidir. Gerçek kullanıcı yorumları entegrasyonu
-                daha sonra eklenebilir.
+                Yorumlar temsilidir. Gerçek kullanıcı yorumları entegrasyonu daha sonra eklenebilir.
               </p>
             </div>
           </div>
@@ -670,9 +868,7 @@ export default function ProductDetailPage() {
         {/* Sağ: Sipariş & Garanti kutuları */}
         <div className="space-y-4">
           <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm text-sm space-y-3">
-            <h3 className="font-semibold text-gray-900">
-              Sipariş & Teslimat
-            </h3>
+            <h3 className="font-semibold text-gray-900">Sipariş & Teslimat</h3>
             <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
               <li>Saat 16:00&apos;ya kadar aynı gün kargo.</li>
               <li>Türkiye&apos;nin her yerine hızlı teslimat.</li>
@@ -682,15 +878,11 @@ export default function ProductDetailPage() {
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 shadow-sm text-sm space-y-3">
-            <h3 className="font-semibold text-gray-900">
-              Garanti & Destek
-            </h3>
+            <h3 className="font-semibold text-gray-900">Garanti & Destek</h3>
             <ul className="text-xs text-gray-600 space-y-1 list-disc list-inside">
               <li>Ürünler faturalı ve garantilidir.</li>
               <li>Montaj öncesi ürün kontrolü yapınız.</li>
-              <li>
-                Destek için WhatsApp hattımızdan bize ulaşabilirsiniz.
-              </li>
+              <li>Destek için WhatsApp hattımızdan bize ulaşabilirsiniz.</li>
             </ul>
           </div>
         </div>
@@ -699,14 +891,10 @@ export default function ProductDetailPage() {
       {/* Benzer Ürünler */}
       {similarProducts.length > 0 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Benzer Ürünler
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900">Benzer Ürünler</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {similarProducts.map((sp) => {
-              const spInStock =
-                typeof sp.STOCK_QUANTITY === "number" &&
-                sp.STOCK_QUANTITY > 0;
+              const spInStock = typeof sp.STOCK_QUANTITY === "number" && sp.STOCK_QUANTITY > 0;
 
               return (
                 <Link
@@ -725,20 +913,12 @@ export default function ProductDetailPage() {
                   <p className="text-xs text-gray-500 line-clamp-1">
                     {sp.BRAND || sp.CAR_BRAND || "Marka"}
                   </p>
-                  <p className="text-sm font-medium line-clamp-2 min-h-[38px]">
-                    {sp.NAME}
-                  </p>
+                  <p className="text-sm font-medium line-clamp-2 min-h-[38px]">{sp.NAME}</p>
                   <p className="text-sm font-semibold text-red-600 mt-1">
                     {sp.price.toLocaleString("tr-TR")} ₺
                   </p>
-                  <p
-                    className={`text-[11px] mt-1 ${
-                      spInStock ? "text-emerald-600" : "text-red-600"
-                    }`}
-                  >
-                    {spInStock
-                      ? `Stok: ${sp.STOCK_QUANTITY}`
-                      : "Stokta yok"}
+                  <p className={`text-[11px] mt-1 ${spInStock ? "text-emerald-600" : "text-red-600"}`}>
+                    {spInStock ? `Stok: ${sp.STOCK_QUANTITY}` : "Stokta yok"}
                   </p>
                 </Link>
               );
