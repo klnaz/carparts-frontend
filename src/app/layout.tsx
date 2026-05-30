@@ -25,7 +25,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr" className={montserrat.className}>
-      <body className="bg-gray-50 min-h-screen flex flex-col">
+      <body className="bg-zinc-50 min-h-screen flex flex-col text-zinc-800 selection:bg-red-600 selection:text-white">
         <ClientProviders>
           <ToastContainer position="top-center" autoClose={3000} />
 

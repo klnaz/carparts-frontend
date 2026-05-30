@@ -15,7 +15,7 @@ const SubNavbar = () => {
     <>
       {/* DESKTOP NAV */}
       <div
-        className="hidden md:flex flex-col bg-white border-t border-gray-200 relative"
+        className="hidden md:flex flex-col bg-white border-t border-b border-zinc-200/80 relative shadow-sm"
         onMouseLeave={() => setShowMega(false)}
       >
         <div className="flex items-center justify-between px-6 py-3 text-sm font-medium">
@@ -24,33 +24,33 @@ const SubNavbar = () => {
           <div className="relative">
             <button
               onMouseEnter={() => setShowMega(true)}
-              className="flex items-center gap-2 bg-gray-900 text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition-all shadow-sm"
+              className="flex items-center gap-2.5 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl transition-all shadow-md shadow-red-200 cursor-pointer font-semibold"
             >
               <FiMenu size={18} />
               <span>Kategoriler</span>
             </button>
 
             {showMega && (
-              <div className="absolute top-12 left-0 bg-white shadow-xl rounded-xl border border-gray-200 p-6 z-50 grid grid-cols-4 gap-8 animate-fadeIn w-[900px]">
+              <div className="absolute top-12 left-0 bg-white border border-zinc-200/80 shadow-2xl rounded-2xl p-6 z-50 grid grid-cols-4 gap-8 animate-fadeIn w-[950px] text-zinc-800">
 
                 {categoryData.map((category) => (
-                  <div key={category.name}>
-                    <h3 className="font-bold text-gray-900 mb-3 text-[15px]">
+                  <div key={category.name} className="space-y-4">
+                    <h3 className="font-bold text-red-600 text-[14px] border-b border-zinc-100 pb-1.5 uppercase tracking-wider">
                       {category.name}
                     </h3>
 
                     {category.subcategories.map((sub) => (
-                      <div key={sub.name} className="mb-2">
-                        <h4 className="font-semibold text-gray-700 text-sm mb-1">
+                      <div key={sub.name} className="space-y-1.5">
+                        <h4 className="font-semibold text-zinc-800 text-xs">
                           {sub.name}
                         </h4>
 
-                        <div className="flex flex-col gap-1">
+                        <div className="flex flex-col gap-1 pl-2">
                           {sub.items.map((item) => (
                             <Link
                               key={item}
                               href={`/products/${item.toLowerCase().replace(/ /g, "-")}`}
-                              className="text-gray-600 hover:text-gray-900 transition text-sm"
+                              className="text-zinc-500 hover:text-red-650 transition-colors text-xs py-0.5 font-medium"
                             >
                               {item}
                             </Link>
@@ -65,23 +65,23 @@ const SubNavbar = () => {
           </div>
 
           {/* QUICK LINKS */}
-          <div className="flex items-center gap-8 text-gray-700">
-            <Link href="/cok-satanlar" className="hover:text-gray-900 transition">
+          <div className="flex items-center gap-8 text-zinc-600 font-semibold">
+            <Link href="/cok-satanlar" className="hover:text-red-650 transition-colors text-xs">
               Çok Satanlar
             </Link>
-            <Link href="/kampanyalar" className="hover:text-gray-900 transition">
+            <Link href="/kampanyalar" className="hover:text-red-650 transition-colors text-xs">
               Kampanyalar
             </Link>
-            <Link href="/yeni-urunler" className="hover:text-gray-900 transition">
+            <Link href="/yeni-urunler" className="hover:text-red-650 transition-colors text-xs">
               Yeni Ürünler
             </Link>
-            <Link href="/bakim-seti" className="hover:text-gray-900 transition">
+            <Link href="/bakim-seti" className="hover:text-red-650 transition-colors text-xs">
               Bakım Setleri
             </Link>
-            <Link href="/yag-cesitleri" className="hover:text-gray-900 transition">
+            <Link href="/yag-cesitleri" className="hover:text-red-650 transition-colors text-xs">
               Yağ Çeşitleri
             </Link>
-            <Link href="/antifiriz" className="hover:text-gray-900 transition">
+            <Link href="/antifiriz" className="hover:text-red-650 transition-colors text-xs">
               Antifriz Çeşitleri
             </Link>
           </div>
@@ -89,50 +89,51 @@ const SubNavbar = () => {
       </div>
 
       {/* MOBILE NAV */}
-      <div className="flex md:hidden px-4 py-3 bg-white border-t border-gray-200 items-center justify-between">
+      <div className="flex md:hidden px-4 py-3 bg-white border-t border-zinc-200 items-center justify-between text-zinc-800 shadow-sm">
         <FiMenu
           size={26}
           onClick={() => setMobileMenu(true)}
-          className="text-gray-900"
+          className="text-zinc-650 hover:text-red-600 cursor-pointer"
         />
-        <span className="font-semibold text-gray-900 text-lg">Kategoriler</span>
+        <span className="font-bold text-zinc-700 text-md tracking-wider">KATEGORİLER</span>
       </div>
 
       {/* MOBILE SLIDE MENU */}
       <div
-        className={`fixed top-0 left-0 h-full w-72 bg-white z-50 shadow-xl transform transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-full w-72 bg-white border-r border-zinc-200 z-50 shadow-2xl transform transition-transform duration-300 ${
           mobileMenu ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex justify-between items-center px-4 py-4 border-b">
-          <span className="text-lg font-semibold">Kategoriler</span>
+        <div className="flex justify-between items-center px-4 py-4 border-b border-zinc-100">
+          <span className="text-md font-bold text-zinc-800 uppercase tracking-wide">Kategoriler</span>
           <IoMdClose
             size={26}
-            className="text-gray-900"
+            className="text-zinc-400 hover:text-red-600 cursor-pointer"
             onClick={() => setMobileMenu(false)}
           />
         </div>
 
-        <div className="overflow-y-auto h-full p-4">
-
+        <div className="overflow-y-auto h-[calc(100%-80px)] p-4 space-y-4">
           {categoryData.map((category) => (
-            <div key={category.name} className="mb-4">
-              <h3 className="font-bold text-gray-900 mb-2">{category.name}</h3>
+            <div key={category.name} className="space-y-3">
+              <h3 className="font-bold text-red-600 text-sm border-b border-zinc-100 pb-1">{category.name}</h3>
 
               {category.subcategories.map((sub) => (
-                <div key={sub.name} className="mb-3">
-                  <h4 className="font-semibold text-gray-700 text-sm mb-1">{sub.name}</h4>
+                <div key={sub.name} className="space-y-1.5 pl-1.5">
+                  <h4 className="font-semibold text-zinc-800 text-xs">{sub.name}</h4>
 
-                  {sub.items.map((item) => (
-                    <Link
-                      key={item}
-                      href={`/products/${item.toLowerCase().replace(/ /g, "-")}`}
-                      onClick={() => setMobileMenu(false)}
-                      className="block text-gray-600 hover:text-gray-900 text-sm py-1"
-                    >
-                      {item}
-                    </Link>
-                  ))}
+                  <div className="flex flex-col gap-1 pl-2 border-l border-zinc-100">
+                    {sub.items.map((item) => (
+                      <Link
+                        key={item}
+                        href={`/products/${item.toLowerCase().replace(/ /g, "-")}`}
+                        onClick={() => setMobileMenu(false)}
+                        className="block text-zinc-500 hover:text-red-650 text-xs py-1 transition-colors font-medium"
+                      >
+                        {item}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

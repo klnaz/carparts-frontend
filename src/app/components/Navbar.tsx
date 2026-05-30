@@ -78,25 +78,25 @@ const Navbar = () => {
   };
 
   return (
-    <div className="w-full bg-white shadow-sm sticky top-0 z-50">
+    <div className="w-full bg-white/95 border-b border-zinc-200/85 backdrop-blur-md sticky top-0 z-50 text-zinc-800 transition-all duration-300 shadow-sm">
       <div className="max-w-[1400px] mx-auto flex items-center justify-between py-4 px-4 md:px-6">
         {/* Logo */}
-        <Link href="/" className="text-3xl font-bold tracking-wider text-black">
-          Ko<span className="text-red-600">parts</span>
+        <Link href="/" className="text-3xl font-extrabold tracking-wider text-zinc-900">
+          Ko<span className="text-red-600 drop-shadow-[0_2px_8px_rgba(220,38,38,0.15)]">parts</span>
         </Link>
 
         {/* Search - Desktop */}
-        <div className="hidden md:flex items-center text-sm gap-2 border border-gray-300 bg-gray-100 px-4 rounded-xl flex-1 max-w-2xl mx-6">
+        <div className="hidden md:flex items-center text-sm gap-2 border border-zinc-200 bg-zinc-100/60 hover:bg-zinc-100/90 focus-within:bg-white focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-200 px-4 rounded-xl flex-1 max-w-2xl mx-6 transition-all duration-300 shadow-inner">
           <CgSearch
             onClick={handleSearchSubmit}
-            className="cursor-pointer text-gray-500"
+            className="cursor-pointer text-zinc-400 hover:text-red-600 transition-colors"
             size={20}
           />
           <input
             ref={inputRef}
-            className="py-2 w-full bg-transparent outline-none placeholder-gray-500"
+            className="py-2.5 w-full bg-transparent outline-none placeholder-zinc-400 text-zinc-800 text-sm font-medium"
             type="text"
-            placeholder="Parça, OEM numara veya marka ara"
+            placeholder="Parça, OEM numara veya marka ara..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={handleSearchKeyDown}
@@ -111,35 +111,35 @@ const Navbar = () => {
             onMouseEnter={handleAccountMouseEnter}
             onMouseLeave={handleAccountMouseLeave}
           >
-            <button className="group flex items-center gap-2 text-red-600 hover:text-black transition">
+            <button className="group flex items-center gap-2 text-zinc-650 hover:text-red-650 transition-colors cursor-pointer select-none">
               {/* Icon */}
               <span className="relative w-[20px] h-[20px] flex items-center justify-center">
                 <FaRegUser
-                  size={20}
-                  className="absolute text-red-600 transition-opacity group-hover:opacity-0"
+                  size={19}
+                  className="absolute text-zinc-450 transition-opacity group-hover:opacity-0"
                 />
                 <FaUser
-                  size={20}
+                  size={19}
                   className="absolute text-red-600 opacity-0 transition-opacity group-hover:opacity-100"
                 />
               </span>
 
               {/* Metin bloğu */}
               <span className="flex flex-col items-start leading-tight">
-                <span className="text-sm">Hesabım</span>
+                <span className="text-xs font-semibold">Hesabım</span>
 
                 {/* Hydration safe: sadece mounted olduktan sonra koşullu render */}
                 {mounted && (
                   <>
                     {token ? (
                       fullName ? (
-                        <span className="text-[11px] text-gray-500">
+                        <span className="text-[10px] text-zinc-450 max-w-[100px] truncate font-medium">
                           {fullName}
                         </span>
                       ) : null
                     ) : (
-                      <span className="text-[11px] text-gray-500">
-                        Giriş yap / Kayıt ol
+                      <span className="text-[10px] text-zinc-450 font-medium">
+                        Giriş yap
                       </span>
                     )}
                   </>
@@ -149,18 +149,18 @@ const Navbar = () => {
 
             {/* Dropdown */}
             {isAccountOpen && (
-              <div className="absolute right-0 top-full mt-2 w-52 bg-white shadow-lg border rounded-lg py-2 z-50">
+              <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-zinc-200/90 shadow-2xl rounded-xl py-2 z-50 text-zinc-700">
                 {token ? (
                   <>
                     <button
                       onClick={() => router.push("/hesabim")}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                      className="block w-full text-left px-4 py-2 hover:bg-zinc-50 hover:text-zinc-900 text-xs font-semibold transition-colors cursor-pointer"
                     >
                       Hesabım
                     </button>
                     <button
                       onClick={() => router.push("/siparislerim")}
-                      className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                      className="block w-full text-left px-4 py-2 hover:bg-zinc-50 hover:text-zinc-900 text-xs font-semibold transition-colors cursor-pointer"
                     >
                       Siparişlerim
                     </button>
@@ -169,7 +169,7 @@ const Navbar = () => {
                         dispatch(logout());
                         router.push("/signin");
                       }}
-                      className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100 text-sm"
+                      className="block w-full text-left px-4 py-2.5 text-red-600 hover:bg-red-50 hover:text-red-700 text-xs font-bold transition-colors border-t border-zinc-100 mt-1.5 pt-2.5"
                     >
                       Çıkış Yap
                     </button>
@@ -177,7 +177,7 @@ const Navbar = () => {
                 ) : (
                   <button
                     onClick={() => router.push("/signin")}
-                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
+                    className="block w-full text-left px-4 py-2 hover:bg-zinc-50 hover:text-zinc-900 text-xs font-semibold transition-colors cursor-pointer"
                   >
                     Giriş Yap
                   </button>
@@ -189,30 +189,40 @@ const Navbar = () => {
           {/* Favoriler */}
           <Link
             href="/favorilerim"
-            className="group flex items-center gap-2 text-gray-700 hover:text-red-600 transition"
+            className="group flex items-center gap-2 text-zinc-650 hover:text-red-600 transition-colors"
           >
-            <AiOutlineHeart
-              size={22}
-              className="text-red-600 group-hover:hidden"
-            />
-            <AiFillHeart size={22} className="text-red-600 hidden group-hover:block" />
-            Favoriler
+            <span className="relative w-[22px] h-[22px] flex items-center justify-center">
+              <AiOutlineHeart
+                size={22}
+                className="absolute text-zinc-450 transition-opacity group-hover:opacity-0"
+              />
+              <AiFillHeart
+                size={22}
+                className="absolute text-red-600 opacity-0 transition-opacity group-hover:opacity-100"
+              />
+            </span>
+            <span className="text-xs font-semibold">Favoriler</span>
           </Link>
 
           {/* Sepet */}
           <Link
             href="/sepetim"
-            className="group relative flex items-center gap-2 text-gray-700 hover:text-red-600 transition"
+            className="group relative flex items-center gap-2 text-zinc-650 hover:text-red-600 transition-colors"
           >
-            <HiOutlineShoppingBag
-              size={22}
-              className="text-red-600 group-hover:hidden"
-            />
-            <HiShoppingBag size={22} className="text-red-600 hidden group-hover:block" />
-            <span>Sepetim</span>
+            <span className="relative w-[22px] h-[22px] flex items-center justify-center">
+              <HiOutlineShoppingBag
+                size={22}
+                className="absolute text-zinc-450 transition-opacity group-hover:opacity-0"
+              />
+              <HiShoppingBag
+                size={22}
+                className="absolute text-red-600 opacity-0 transition-opacity group-hover:opacity-100"
+              />
+            </span>
+            <span className="text-xs font-semibold">Sepetim</span>
 
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-3 bg-red-600 text-white text-[10px] px-2 py-[2px] rounded-full">
+              <span className="absolute -top-1.5 -right-2.5 bg-red-600 text-white text-[9px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center font-bold shadow-[0_2px_6px_rgba(220,38,38,0.4)]">
                 {cartCount}
               </span>
             )}
@@ -221,7 +231,7 @@ const Navbar = () => {
 
         {/* Mobile Button */}
         <button
-          className="md:hidden text-red-600"
+          className="md:hidden text-zinc-600 hover:text-red-650 transition-colors"
           onClick={() => setMobileMenuOpen(true)}
         >
           <FiMenu size={26} />
@@ -232,29 +242,29 @@ const Navbar = () => {
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-50">
           <div
-            className="absolute inset-0 bg-gray-200 bg-opacity-60"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             onClick={() => setMobileMenuOpen(false)}
           />
 
-          <div className="relative w-72 bg-white h-full p-5 flex flex-col shadow-xl z-50">
+          <div className="relative w-72 bg-white border-r border-zinc-200 h-full p-5 flex flex-col shadow-2xl z-50 text-zinc-700">
             <button
-              className="self-end mb-4 text-gray-700"
+              className="self-end mb-6 text-zinc-400 hover:text-red-600 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               <FiX size={26} />
             </button>
 
             {/* Search Mobile */}
-            <div className="flex items-center text-sm gap-2 border border-gray-300 bg-gray-100 px-3 rounded-lg mb-4">
+            <div className="flex items-center text-sm gap-2 border border-zinc-200 bg-zinc-100 px-3 rounded-xl mb-6 focus-within:border-red-500 focus-within:bg-white focus-within:ring-1 focus-within:ring-red-200">
               <CgSearch
                 size={20}
-                className="text-gray-500 cursor-pointer"
+                className="text-zinc-450 cursor-pointer hover:text-red-600"
                 onClick={handleSearchSubmit}
               />
               <input
-                className="py-2 w-full bg-transparent outline-none"
+                className="py-2.5 w-full bg-transparent outline-none text-zinc-800 placeholder-zinc-400 font-semibold text-sm"
                 type="text"
-                placeholder="Parça, OEM numara veya marka ara"
+                placeholder="Parça, OEM numara ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
@@ -263,7 +273,7 @@ const Navbar = () => {
 
             <Link
               href="/favorilerim"
-              className="py-2 border-b"
+              className="py-3 border-b border-zinc-100 text-sm font-semibold hover:text-red-600 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Favorilerim
@@ -271,12 +281,12 @@ const Navbar = () => {
 
             <Link
               href="/sepetim"
-              className="py-2 border-b flex items-center justify-between"
+              className="py-3 border-b border-zinc-100 text-sm font-semibold flex items-center justify-between hover:text-red-600 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               <span>Sepetim</span>
               {cartCount > 0 && (
-                <span className="inline-flex items-center justify-center bg-red-600 text-white text-[10px] px-2 py-[2px] rounded-full">
+                <span className="inline-flex items-center justify-center bg-red-600 text-white text-[10px] px-2 py-[2px] rounded-full font-bold shadow-[0_2px_6px_rgba(220,38,38,0.3)]">
                   {cartCount}
                 </span>
               )}
@@ -286,14 +296,14 @@ const Navbar = () => {
               <>
                 <Link
                   href="/hesabim"
-                  className="py-2 border-b"
+                  className="py-3 border-b border-zinc-100 text-sm font-semibold hover:text-red-600 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Hesabım
                 </Link>
                 <Link
                   href="/siparislerim"
-                  className="py-2 border-b"
+                  className="py-3 border-b border-zinc-100 text-sm font-semibold hover:text-red-600 transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Siparişlerim
@@ -304,7 +314,7 @@ const Navbar = () => {
                     setMobileMenuOpen(false);
                     router.push("/signin");
                   }}
-                  className="text-left py-2 text-red-600"
+                  className="text-left py-4 text-red-600 font-bold text-sm hover:text-red-500 transition-colors"
                 >
                   Çıkış Yap
                 </button>
@@ -312,7 +322,7 @@ const Navbar = () => {
             ) : (
               <Link
                 href="/signin"
-                className="py-2 border-b"
+                className="py-3 border-b border-zinc-100 text-sm font-semibold hover:text-red-600 transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Giriş Yap

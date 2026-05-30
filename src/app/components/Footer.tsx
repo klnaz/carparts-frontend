@@ -19,7 +19,7 @@ import {
 } from "react-icons/io5";
 import { SiAppgallery } from "react-icons/si";
 
-const Footer = (): JSX.Element => {
+const Footer = () => {
   return (
     <footer className="bg-gray-900 text-gray-300 pt-10 pb-6 mt-10">
       {/* Üst Kısım */}

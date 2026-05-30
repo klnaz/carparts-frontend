@@ -8,7 +8,7 @@ import {
   useChangePasswordMutation,
   UpdateUserPayload,
 } from "@/redux/api/userApi";
-import { FiUser, FiMail, FiPhone, FiLock } from "react-icons/fi";
+import { User, Mail, Phone, Lock } from "lucide-react";
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import PasswordRules from "./PasswordRules";
 
@@ -35,11 +35,11 @@ const ProfileInfo: React.FC = () => {
   useEffect(() => {
     if (!profileData) return;
 
- setName(profileData.firstName ?? "");
-setSurname(profileData.lastName ?? "");
-setEmail(profileData.email ?? "");
+    setName(profileData.firstName ?? "");
+    setSurname(profileData.lastName ?? "");
+    setEmail(profileData.email ?? "");
 
-const rawPhone = profileData.phoneNumber ?? "";
+    const rawPhone = profileData.phoneNumber ?? "";
     const normalized = String(rawPhone).replace(/^0/, "");
     setPhone(normalized);
   }, [profileData]);
@@ -134,16 +134,18 @@ const rawPhone = profileData.phoneNumber ?? "";
 
   if (isLoading) {
     return (
-      <div className="p-4 bg-white rounded-xl border shadow-sm text-xs">
-        Profil bilgileri yükleniyor...
+      <div className="flex flex-col items-center justify-center py-12 space-y-3">
+        <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-zinc-500">Profil bilgileri yükleniyor...</p>
       </div>
     );
   }
 
   if (isError || !profileData) {
     return (
-      <div className="p-4 bg-white rounded-xl border shadow-sm text-red-500 text-xs">
-        Profil bilgileri alınamadı.
+      <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+        <p className="text-sm text-red-650 text-red-700 font-semibold">Profil bilgileri alınamadı.</p>
+        <p className="text-xs text-zinc-500 mt-1">Lütfen daha sonra tekrar deneyiniz.</p>
       </div>
     );
   }
@@ -151,159 +153,169 @@ const rawPhone = profileData.phoneNumber ?? "";
   const initials = (name?.[0] ?? "") + (surname?.[0] ?? "");
 
   return (
-    <div className="space-y-6">
-      <div className="p-6 bg-white rounded-xl border shadow-sm space-y-6">
-        <div className="flex items-center gap-3 pb-4 border-b">
-          <div className="w-12 h-12 rounded-full bg-gray-900 text-white flex items-center justify-center font-semibold">
-            {initials || <FiUser size={20} />}
+    <div className="space-y-8">
+      {/* Profil Güncelleme */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 pb-4 border-b border-zinc-100">
+          <div className="w-14 h-14 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-700 flex items-center justify-center font-bold text-lg shadow-sm uppercase">
+            {initials || <User size={24} />}
           </div>
-          <div>
-            <h2 className="text-lg font-semibold">Profil Bilgilerim</h2>
-            <p className="text-[12px] text-gray-500">
-              Hesap bilgilerinizi görüntüleyin ve güncelleyin.
+          <div className="text-left">
+            <h2 className="text-lg font-bold text-zinc-900">Profil Bilgilerim</h2>
+            <p className="text-xs text-zinc-550">
+              Hesap bilgilerinizi buradan güncel tutabilirsiniz.
             </p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5 text-sm">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="block text-xs font-medium">Ad</label>
-              <div className="relative mt-1">
-                <FiUser className="absolute left-2 top-2.5 text-gray-400" />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="grid gap-5 md:grid-cols-2 text-left">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-700">Ad</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
                 <input
                   type="text"
-                  className="w-full border rounded-md pl-8 py-2 text-xs"
+                  className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-4 py-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all duration-200"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  placeholder="Adınız"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium">Soyad</label>
-              <div className="relative mt-1">
-                <FiUser className="absolute left-2 top-2.5 text-gray-400" />
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-700">Soyad</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
                 <input
                   type="text"
-                  className="w-full border rounded-md pl-8 py-2 text-xs"
+                  className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-4 py-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all duration-200"
                   value={surname}
                   onChange={(e) => setSurname(e.target.value)}
+                  placeholder="Soyadınız"
                 />
               </div>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <label className="block text-xs font-medium">E-posta</label>
-              <div className="relative mt-1">
-                <FiMail className="absolute left-2 top-2.5 text-gray-400" />
+          <div className="grid gap-5 md:grid-cols-2 text-left">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-700">E-posta</label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
                 <input
                   type="email"
-                  className="w-full border rounded-md pl-8 py-2 text-xs"
+                  className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-4 py-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all duration-200"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  placeholder="E-posta adresiniz"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium">
-                Telefon (5XXXXXXXXX)
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-700">
+                Telefon (Başında sıfır olmadan)
               </label>
-              <div className="relative mt-1">
-                <FiPhone className="absolute left-2 top-2.5 text-gray-400" />
+              <div className="relative">
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 w-4 h-4" />
                 <input
                   type="tel"
                   maxLength={10}
-                  className={`w-full border rounded-md pl-8 py-2 text-xs ${
-                    phoneError ? "border-red-500" : ""
+                  className={`w-full bg-white border rounded-xl pl-10 pr-4 py-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all duration-200 ${
+                    phoneError ? "border-red-500" : "border-zinc-200"
                   }`}
                   value={phone}
                   onChange={(e) => validatePhone(e.target.value)}
-                  placeholder="5215458474"
+                  placeholder="5XXXXXXXXX"
                 />
               </div>
               {phoneError && (
-                <p className="text-[11px] text-red-500 mt-1">
+                <p className="text-[10px] text-red-500 font-medium">
                   Telefon formatı hatalı. Örnek: 5215458474
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-2">
             <button
               type="submit"
               disabled={isUpdating}
-              className="px-5 py-2 bg-gray-900 text-white rounded-md text-xs disabled:opacity-50"
+              className="px-6 py-3.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-bold shadow-md shadow-red-200 hover:shadow-red-300 transition-all duration-200 disabled:opacity-50 select-none cursor-pointer"
             >
-              {isUpdating ? "Kaydediliyor..." : "Bilgileri Güncelle"}
+              {isUpdating ? "Güncelleniyor..." : "Profil Bilgilerini Güncelle"}
             </button>
           </div>
         </form>
       </div>
 
-      <div className="p-6 bg-white rounded-xl border shadow-sm space-y-4">
-        <div className="flex items-center gap-3 border-b pb-4">
-          <div className="w-9 h-9 rounded-full bg-gray-900 text-white flex items-center justify-center">
-            <FiLock size={18} />
+      {/* Şifre Değiştirme */}
+      <div className="space-y-6 pt-6 border-t border-zinc-200">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-zinc-50 border border-zinc-200 text-zinc-550 flex items-center justify-center">
+            <Lock size={18} />
           </div>
-          <div>
-            <h3 className="text-sm font-semibold">Şifre Değiştir</h3>
-            <p className="text-[11px] text-gray-500">
-              Mevcut şifrenizi ve yeni şifrenizi girin.
+          <div className="text-left">
+            <h3 className="text-md font-bold text-zinc-900">Şifre Değiştir</h3>
+            <p className="text-xs text-zinc-550">
+              Hesap güvenliğiniz için periyodik olarak şifrenizi yenileyin.
             </p>
           </div>
         </div>
 
-        <form onSubmit={handlePasswordChange} className="space-y-3 text-xs">
-          <div className="space-y-1">
-            <label className="block font-medium">Mevcut Şifre</label>
+        <form onSubmit={handlePasswordChange} className="space-y-4">
+          <div className="space-y-1.5 text-left">
+            <label className="text-xs font-semibold text-zinc-750">Mevcut Şifre</label>
             <input
               type="password"
-              className="w-full border rounded-md px-2 py-2 text-xs"
+              className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all duration-200"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
               autoComplete="current-password"
+              placeholder="••••••••"
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="block font-medium">Yeni Şifre</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-750">Yeni Şifre</label>
               <input
                 type="password"
-                className="w-full border rounded-md px-2 py-2 text-xs"
+                className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all duration-200"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 autoComplete="new-password"
+                placeholder="••••••••"
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="block font-medium">Yeni Şifre (Tekrar)</label>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-zinc-750">Yeni Şifre (Tekrar)</label>
               <input
                 type="password"
-                className="w-full border rounded-md px-2 py-2 text-xs"
+                className="w-full bg-white border border-zinc-200 rounded-xl px-4 py-3 text-xs text-zinc-800 placeholder-zinc-400 focus:outline-none focus:bg-white focus:border-red-500 focus:ring-1 focus:ring-red-200 transition-all duration-200"
                 value={newPasswordAgain}
                 onChange={(e) => setNewPasswordAgain(e.target.value)}
                 autoComplete="new-password"
+                placeholder="••••••••"
               />
             </div>
           </div>
 
-          <PasswordRules password={newPassword} confirmPassword={newPasswordAgain} />
+          <div className="bg-zinc-50 p-4 rounded-xl border border-zinc-200 text-zinc-650 shadow-sm">
+            <PasswordRules password={newPassword} confirmPassword={newPasswordAgain} />
+          </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end pt-2">
             <button
               type="submit"
               disabled={isChangingPassword}
-              className="px-4 py-2 bg-gray-900 text-white rounded-md disabled:opacity-50"
+              className="px-6 py-3 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 border border-zinc-250 rounded-xl text-xs font-bold transition-all duration-200 disabled:opacity-50 select-none cursor-pointer shadow-sm"
             >
-              {isChangingPassword ? "Şifre Değiştiriliyor..." : "Şifreyi Güncelle"}
+              {isChangingPassword ? "Şifre Güncelleniyor..." : "Şifreyi Güncelle"}
             </button>
           </div>
         </form>
