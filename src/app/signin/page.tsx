@@ -14,12 +14,16 @@ import { DottedSurface } from "@/components/ui/dotted-surface";
 
 
 
-const SignInAndUp: React.FC = () => {
+interface SignInAndUpProps {
+  initialState?: "Giriş Yap" | "Kayıt Ol";
+}
+
+const SignInAndUp: React.FC<SignInAndUpProps> = ({ initialState }) => {
   const router = useRouter();
   const dispatch = useDispatch();
   const token = useSelector((state: RootState) => state.auth.token);
 
-  const [currentState, setCurrentState] = useState<"Giriş Yap" | "Kayıt Ol">("Giriş Yap");
+  const [currentState, setCurrentState] = useState<"Giriş Yap" | "Kayıt Ol">(initialState || "Giriş Yap");
   const [userFirstName, setUserFirstName] = useState("");
   const [userLastName, setUserLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -117,186 +121,7 @@ const SignInAndUp: React.FC = () => {
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-200/20 rounded-full blur-3xl -z-20 pointer-events-none animate-pulse" style={{ animationDuration: "8s" }} />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-zinc-200/60 rounded-full blur-3xl -z-20 pointer-events-none animate-pulse" style={{ animationDuration: "12s" }} />
 
-      {/* Floating Decorative Custom Car Parts PNG Icons */}
-      <motion.div
-        animate={{
-          y: [0, -12, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 9, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 65, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden lg:block select-none pointer-events-none opacity-[0.04]"
-        style={{ top: "8%", left: "6%" }}
-      >
-        <img src="/icons/piston.png" alt="Piston" className="w-12 h-12 object-contain" />
-      </motion.div>
 
-      <motion.div
-        animate={{
-          y: [0, 12, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 11, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 70, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden lg:block select-none pointer-events-none opacity-[0.04]"
-        style={{ top: "10%", right: "8%" }}
-      >
-        <img src="/icons/turbine.png" alt="Turbine" className="w-14 h-14 object-contain" />
-      </motion.div>
-
-      <motion.div
-        animate={{
-          y: [0, -10, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 10, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 75, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden lg:block select-none pointer-events-none opacity-[0.04]"
-        style={{ top: "22%", left: "14%" }}
-      >
-        <img src="/icons/car-battery.png" alt="Car Battery" className="w-12 h-12 object-contain" />
-      </motion.div>
-
-      <motion.div
-        animate={{
-          y: [0, 10, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 12, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 80, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden lg:block select-none pointer-events-none opacity-[0.04]"
-        style={{ top: "24%", right: "16%" }}
-      >
-        <img src="/icons/engine-oil.png" alt="Engine Oil" className="w-12 h-12 object-contain" />
-      </motion.div>
-
-      <motion.div
-        animate={{
-          y: [0, -8, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 11, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 85, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden xl:block select-none pointer-events-none opacity-[0.04]"
-        style={{ top: "38%", left: "4%" }}
-      >
-        <img src="/icons/disc-brake.png" alt="Disc Brake" className="w-14 h-14 object-contain" />
-      </motion.div>
-
-      <motion.div
-        animate={{
-          y: [0, 8, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 13, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 90, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden xl:block select-none pointer-events-none opacity-[0.04]"
-        style={{ top: "40%", right: "6%" }}
-      >
-        <img src="/icons/car-engine.png" alt="Car Engine" className="w-14 h-14 object-contain" />
-      </motion.div>
-
-      <motion.div
-        animate={{
-          y: [0, -10, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 12, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 95, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden xl:block select-none pointer-events-none opacity-[0.03]"
-        style={{ top: "54%", left: "15%" }}
-      >
-        <img src="/icons/timing-belt.png" alt="Timing Belt" className="w-14 h-14 object-contain" />
-      </motion.div>
-
-      <motion.div
-        animate={{
-          y: [0, 10, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 14, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 100, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden xl:block select-none pointer-events-none opacity-[0.03]"
-        style={{ top: "56%", right: "14%" }}
-      >
-        <img src="/icons/air-filter.png" alt="Air Filter" className="w-12 h-12 object-contain" />
-      </motion.div>
-
-      <motion.div
-        animate={{
-          y: [0, -12, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 13, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 105, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden lg:block select-none pointer-events-none opacity-[0.04]"
-        style={{ top: "70%", left: "8%" }}
-      >
-        <img src="/icons/suspension.png" alt="Suspension" className="w-14 h-14 object-contain" />
-      </motion.div>
-
-      <motion.div
-        animate={{
-          y: [0, 12, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 9, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 60, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden lg:block select-none pointer-events-none opacity-[0.04]"
-        style={{ top: "72%", right: "10%" }}
-      >
-        <img src="/icons/tire.png" alt="Tire" className="w-12 h-12 object-contain" />
-      </motion.div>
-
-      <motion.div
-        animate={{
-          y: [0, -8, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 10, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 62, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden lg:block select-none pointer-events-none opacity-[0.04]"
-        style={{ top: "84%", left: "16%" }}
-      >
-        <img src="/icons/gear.png" alt="Gear" className="w-12 h-12 object-contain" />
-      </motion.div>
-
-      <motion.div
-        animate={{
-          y: [0, 12, 0],
-          rotate: [0, 360]
-        }}
-        transition={{
-          y: { duration: 14, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 110, repeat: Infinity, ease: "linear" }
-        }}
-        className="absolute hidden lg:block select-none pointer-events-none opacity-[0.04]"
-        style={{ top: "86%", right: "18%" }}
-      >
-        <img src="/icons/headlight.png" alt="Headlight" className="w-12 h-12 object-contain" />
-      </motion.div>
 
       {/* Main Authentication Card */}
       <motion.div
